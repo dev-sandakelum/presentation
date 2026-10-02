@@ -31,6 +31,8 @@ export type DisplayScene =
   | { type: 'az-16-responsible-ai' }
   | { type: 'az-17-journey' }
   | { type: 'az-18-closing' }
+  // HTML-iframe based presentations: scene is just a slide index
+  | { type: 'html-slide'; index: number }
 
 export type DisplayState = {
   scene: DisplayScene
@@ -42,7 +44,7 @@ export type RemoteMessage =
   | { type: 'set-scene'; scene: DisplayScene }
   | { type: 'ping' }
 
-// Messages display → remote
+// Messages display → remote (now scoped to a presentation)
 export type ServerMessage =
   | { type: 'state'; state: DisplayState }
   | { type: 'ack'; updatedAt: number }
@@ -52,4 +54,44 @@ export type ServerMessage =
 export const DEFAULT_STATE: DisplayState = {
   scene: { type: 'welcome' },
   updatedAt: Date.now(),
+}
+
+// ── Presentation registry ─────────────────────────────────────────────────────
+
+export type PresentationKind = 'react' | 'html'
+
+export interface PresentationMeta {
+  id: string
+  title: string
+  subtitle: string
+  kind: PresentationKind
+  /** For html kind: path relative to /public (e.g. "/demo/2.html") */
+  htmlPath?: string
+  /** Total number of slides — used by the remote control */
+  slideCount: number
+  color: string   // accent colour for the picker card
+}
+
+export const PRESENTATIONS: PresentationMeta[] = [
+  {
+    id: 'azure-ai',
+    title: 'From Prompt to AI Agent',
+    subtitle: 'Azure AI · Microsoft Learn Student Ambassadors',
+    kind: 'react',
+    slideCount: 18,
+    color: '#4da3ff',
+  },
+  {
+    id: 'nextjs-unlocked',
+    title: 'Next.js Unlocked',
+    subtitle: 'Part 1 of 3 — Concepts · Microsoft Learn Student Ambassadors',
+    kind: 'html',
+    htmlPath: '/demo/2.html',
+    slideCount: 17,
+    color: '#3ee6c4',
+  },
+]
+
+export function getPresentationById(id: string): PresentationMeta | undefined {
+  return PRESENTATIONS.find((p) => p.id === id)
 }

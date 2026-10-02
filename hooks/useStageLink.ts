@@ -7,6 +7,7 @@ import { DEFAULT_STATE } from '@/lib/state'
 export type ConnectionStatus = 'connecting' | 'ready' | 'sending' | 'offline'
 
 interface UseStageLinkOptions {
+  /** Full WS URL including presentation path, e.g. ws://192.168.1.5:3000/ws/azure-ai */
   wsUrl: string | null   // null = don't connect yet
   onState?: (state: DisplayState) => void
 }
@@ -31,8 +32,6 @@ export function useStageLink({ wsUrl, onState }: UseStageLinkOptions): UseStageL
   const pingTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const mountedRef = useRef(true)
 
-  // Keep onState in a ref so it never needs to be a dep of `connect`.
-  // This prevents a reconnect loop when the caller passes an inline arrow function.
   const onStateRef = useRef(onState)
   onStateRef.current = onState
 
@@ -46,8 +45,6 @@ export function useStageLink({ wsUrl, onState }: UseStageLinkOptions): UseStageL
     ws.onopen = () => {
       if (!mountedRef.current) return
       setStatus('ready')
-
-      // Keepalive ping
       pingTimer.current = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
           const ping: RemoteMessage = { type: 'ping' }
@@ -67,14 +64,12 @@ export function useStageLink({ wsUrl, onState }: UseStageLinkOptions): UseStageL
 
       if (msg.type === 'state') {
         setState(msg.state)
-        // Always call the latest version of onState via the ref — never stale
         onStateRef.current?.(msg.state)
         setStatus('ready')
       } else if (msg.type === 'ack') {
         setLastAckAt(msg.updatedAt)
         setStatus('ready')
       }
-      // pong is just a keepalive echo, no action needed
     }
 
     ws.onclose = () => {
@@ -84,10 +79,8 @@ export function useStageLink({ wsUrl, onState }: UseStageLinkOptions): UseStageL
       reconnectTimer.current = setTimeout(connect, RECONNECT_DELAY)
     }
 
-    ws.onerror = () => {
-      ws.close()
-    }
-  }, [wsUrl]) // onState intentionally excluded — accessed via ref
+    ws.onerror = () => { ws.close() }
+  }, [wsUrl])
 
   useEffect(() => {
     mountedRef.current = true

@@ -1322,6 +1322,25 @@ kbd{font:500 min(.75rem,.8vw,1.3vh) var(--font-mono);border:1px solid var(--bord
   var m = location.hash.match(/^#\/(\d+)/);
   var start = m ? Math.min(total, Math.max(1, +m[1])) - 1 : 0;
   go(start);
+
+  /* ---------- postMessage bridge (for iframe embedding) ---------- */
+  // Patch go() to also notify the parent frame on every slide change
+  var _origGo = go;
+  go = function(n) {
+    _origGo(n);
+    try {
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'slide-change', index: cur }, '*');
+      }
+    } catch(e){}
+  };
+
+  // Listen for go-to-slide commands from the parent frame
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'go-to-slide' && typeof e.data.index === 'number') {
+      go(e.data.index);
+    }
+  });
 })();
 </script>
 </body>
