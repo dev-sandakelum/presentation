@@ -6,8 +6,14 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Allow the phone (LAN IP) to load dev resources without cross-origin block
-  allowedDevOrigins: ['192.168.0.218', '10.161.79.82'],
+  // Allow any LAN device to load dev resources without cross-origin block
+  allowedDevOrigins: [
+    '192.168.0.218',
+    '10.161.79.82',
+    '*.local',
+    '10.*',
+    '192.168.*',
+  ],
 }
 
 export default nextConfig

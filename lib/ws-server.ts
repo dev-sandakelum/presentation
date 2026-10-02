@@ -46,14 +46,15 @@ function broadcast(presId: string, msg: ServerMessage) {
 }
 
 /** Extract the presentation ID from a WS request URL.
- *  e.g. /ws/azure-ai  →  "azure-ai"
+ *  e.g. /wss/azure-ai  →  "azure-ai"
+ *       /ws/azure-ai   →  "azure-ai"  (standalone port 4821)
  *       /azure-ai      →  "azure-ai"
  *       /              →  "default"
  */
 function presIdFromUrl(url: string | undefined): string {
   if (!url) return 'default'
-  // strip leading /ws or /ws/
-  const clean = url.replace(/^\/ws\/?/, '').replace(/^\//, '').split('?')[0]
+  // strip leading /wss/ or /ws/ or /
+  const clean = url.replace(/^\/wss?\/?/, '').replace(/^\//, '').split('?')[0]
   return clean || 'default'
 }
 
@@ -107,6 +108,7 @@ export function startWsServer() {
   wss.on('listening', () => {
     const ip = getLocalIP()
     console.log(`\n  ✦ WS server ready   ws://${ip}:${WS_PORT}/<presentationId>`)
+    console.log(`  ✦ WS proxy path     /wss/<presentationId>  (on port 3000)`)
     console.log(`  ✦ Phone remote      http://${ip}:3000/remote/<presentationId>\n`)
   })
 
@@ -119,16 +121,20 @@ export function startWsServer() {
  * Attach a WebSocket upgrade listener to the Next.js HTTP server.
  * Requests to ws://<host>:3000/ws/<presentationId> are forwarded here.
  */
+// Use /wss/ prefix to avoid collision with Next.js's own /ws HMR endpoint
+export const WS_PROXY_PATH = '/wss'
+
 export function attachWsProxy(httpServer: Server) {
   const proxyWss = new WebSocketServer({ noServer: true })
   proxyWss.on('connection', handleClient)
 
   httpServer.on('upgrade', (req: IncomingMessage, socket: Duplex, head: Buffer) => {
     const url = req.url ?? ''
-    if (url === '/ws' || url.startsWith('/ws?') || url.startsWith('/ws/')) {
+    if (url === WS_PROXY_PATH || url.startsWith(WS_PROXY_PATH + '?') || url.startsWith(WS_PROXY_PATH + '/')) {
       proxyWss.handleUpgrade(req, socket, head, (ws) => {
         proxyWss.emit('connection', ws, req)
       })
     }
+    // All other upgrades (Next.js HMR /ws, etc.) are left untouched
   })
 }

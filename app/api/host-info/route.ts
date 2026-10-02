@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getLocalIP } from '@/lib/host'
-import { WS_PORT } from '@/lib/ws-server'
+import { WS_PORT, WS_PROXY_PATH } from '@/lib/ws-server'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,10 +14,10 @@ export function GET(req: Request) {
     ip,
     port: httpPort,
     presId,
-    // Display (laptop) connects via localhost to avoid LAN self-connection firewall issues
+    // Display (laptop) connects via localhost on the standalone port — avoids LAN self-connection issues
     wsLocalUrl: `ws://localhost:${WS_PORT}/${presId}`,
-    // Remote (phone) connects via the /ws proxy on port 3000 — no extra firewall rule needed
-    wsUrl: `ws://${ip}:${httpPort}/ws/${presId}`,
+    // Remote (phone) connects via the /wss proxy on port 3000 — avoids collision with Next.js /ws HMR
+    wsUrl: `ws://${ip}:${httpPort}${WS_PROXY_PATH}/${presId}`,
     remoteUrl: `http://${ip}:${httpPort}/remote/${presId}`,
     displayUrl: `http://${ip}:${httpPort}/display/${presId}`,
   })
