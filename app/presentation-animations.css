@@ -1,0 +1,366 @@
+/*
+ * ============================================================
+ *  PRESENTATION ANIMATIONS
+ *  All background FX, slide transitions, and component
+ *  animations extracted from doc/demo/1.html
+ * ============================================================
+ */
+
+/* ── Design tokens ─────────────────────────────────────────── */
+:root {
+  --pres-bg:     #04070f;
+  --pres-ink:    #e9eefb;
+  --pres-muted:  #93a0b8;
+  --pres-line:   rgba(148,180,255,.14);
+  --pres-blue:   #4da3ff;
+  --pres-violet: #9b8cff;
+  --pres-teal:   #3ee6c4;
+  --pres-warn:   #ffc86b;
+  --pres-good:   #61d6a4;
+  --pres-ease:   cubic-bezier(.22,1,.36,1);
+}
+
+/* ── Neural particle canvas ────────────────────────────────── */
+#pres-net {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── Aurora blobs ──────────────────────────────────────────── */
+.pres-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.pres-aurora .b {
+  position: absolute;
+  border-radius: 50%;
+}
+.pres-b1 {
+  width: 60vmax; height: 60vmax;
+  top: -22vmax; right: -16vmax;
+  background: radial-gradient(circle, rgba(37,99,235,.32), rgba(37,99,235,0) 62%);
+  animation: presDrift1 26s ease-in-out infinite alternate;
+}
+.pres-b2 {
+  width: 55vmax; height: 55vmax;
+  bottom: -24vmax; left: -18vmax;
+  background: radial-gradient(circle, rgba(124,93,250,.26), rgba(124,93,250,0) 62%);
+  animation: presDrift2 32s ease-in-out infinite alternate;
+}
+.pres-b3 {
+  width: 38vmax; height: 38vmax;
+  bottom: 6vmax; right: 12vmax;
+  background: radial-gradient(circle, rgba(45,212,191,.14), rgba(45,212,191,0) 60%);
+  animation: presDrift3 22s ease-in-out infinite alternate;
+}
+@keyframes presDrift1 { to { transform: translate(-8vmax, 10vmax) scale(1.15); } }
+@keyframes presDrift2 { to { transform: translate(10vmax, -8vmax) scale(1.1);  } }
+@keyframes presDrift3 { to { transform: translate(-6vmax, -10vmax) scale(1.25);} }
+
+/* ── Animated grid lines ───────────────────────────────────── */
+.pres-gridlines {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(130,170,255,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(130,170,255,.055) 1px, transparent 1px);
+  background-size: 54px 54px;
+  animation: presGridMove 60s linear infinite;
+  -webkit-mask-image: radial-gradient(ellipse 100% 85% at 50% 42%, #000 25%, transparent 72%);
+  mask-image:         radial-gradient(ellipse 100% 85% at 50% 42%, #000 25%, transparent 72%);
+}
+@keyframes presGridMove { to { background-position: 54px 54px; } }
+
+/* ── Cursor glow blob ──────────────────────────────────────── */
+.pres-cursor-glow {
+  position: fixed;
+  left: 0; top: 0;
+  width: 620px; height: 620px;
+  margin: -310px 0 0 -310px;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 50%;
+  will-change: transform;
+  background: radial-gradient(circle,
+    rgba(77,140,255,.16),
+    rgba(139,110,255,.08) 42%,
+    transparent 68%
+  );
+}
+@media (pointer: coarse) { .pres-cursor-glow { display: none; } }
+
+/* ── Film noise overlay ────────────────────────────────────── */
+.pres-noise {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: .05;
+  mix-blend-mode: overlay;
+  background: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Vignette ──────────────────────────────────────────────── */
+.pres-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(2,5,12,.6) 100%);
+}
+
+/* ── Slide entrance / exit transitions ─────────────────────── */
+.pres-slide-enter {
+  animation: presSlideIn .55s var(--pres-ease) both;
+}
+.pres-slide-exit {
+  animation: presSlideOut .55s var(--pres-ease) both;
+}
+.pres-slide-enter-back {
+  animation: presSlideInBack .55s var(--pres-ease) both;
+}
+.pres-slide-exit-back {
+  animation: presSlideOutBack .55s var(--pres-ease) both;
+}
+
+@keyframes presSlideIn     { from { opacity:0; transform:translateY( 6vh) scale(.985); filter:blur(14px); } }
+@keyframes presSlideOut    { to   { opacity:0; transform:translateY(-7vh) scale(.98);  filter:blur(14px); } }
+@keyframes presSlideInBack { from { opacity:0; transform:translateY(-6vh) scale(.985); filter:blur(14px); } }
+@keyframes presSlideOutBack{ to   { opacity:0; transform:translateY( 7vh) scale(.98);  filter:blur(14px); } }
+
+/* ── Staggered element entrance ────────────────────────────── */
+.pres-rise {
+  animation: presRise .9s var(--pres-ease) backwards;
+  animation-delay: calc(var(--d, 0) * 90ms + 120ms);
+}
+.pres-rise-back {
+  animation: presRiseBack .9s var(--pres-ease) backwards;
+  animation-delay: calc(var(--d, 0) * 90ms + 120ms);
+}
+@keyframes presRise     { from { opacity:0; transform:translateY( 36px) scale(.98); } }
+@keyframes presRiseBack { from { opacity:0; transform:translateY(-36px) scale(.98); } }
+
+/* ── Gradient text shift ────────────────────────────────────── */
+.pres-grad {
+  background: linear-gradient(90deg, #4da3ff, #9b8cff 35%, #3ee6c4 70%, #4da3ff);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: presGradShift 7s linear infinite;
+}
+@keyframes presGradShift { to { background-position: 200% 0; } }
+
+/* ── Blinking dot / caret ───────────────────────────────────── */
+.pres-blink {
+  animation: presBlink 2.4s infinite;
+}
+.pres-blink-fast {
+  animation: presBlink 1.05s steps(2, start) infinite;
+}
+.pres-blink-live {
+  animation: presBlink 1.2s infinite;
+}
+@keyframes presBlink { 50% { opacity: 0; } }
+
+/* ── Typing caret ───────────────────────────────────────────── */
+.pres-caret {
+  display: inline-block;
+  width: .55ch; min-width: 8px;
+  height: 1.05em;
+  translate: 0 .18em;
+  background: var(--pres-blue);
+  margin-left: .15em;
+  box-shadow: 0 0 10px var(--pres-blue);
+  animation: presBlink 1.05s steps(2, start) infinite;
+}
+
+/* ── Animated → arrow ───────────────────────────────────────── */
+.pres-arrow-pulse {
+  animation: presArrowPulse 1.6s ease-in-out infinite;
+  animation-delay: calc(var(--d, 0) * .18s);
+}
+@keyframes presArrowPulse {
+  0%, 100% { opacity: .35; transform: translateX(-4px); }
+  50%       { opacity: 1;   transform: translateX( 4px); }
+}
+
+/* ── Animated + plus ────────────────────────────────────────── */
+.pres-plus-pulse {
+  animation: presPlusPulse 1.9s ease-in-out infinite;
+  animation-delay: calc(var(--d, 0) * .18s);
+}
+@keyframes presPlusPulse {
+  0%, 100% { opacity: .4;  transform: scale(.8);  }
+  50%       { opacity: 1;   transform: scale(1.15); }
+}
+
+/* ── Agent centre glow ──────────────────────────────────────── */
+.pres-agent-glow {
+  animation: presAgentGlow 3.5s ease-in-out infinite;
+}
+@keyframes presAgentGlow {
+  50% { box-shadow: 0 0 90px -14px rgba(77,140,255,.55); }
+}
+
+/* ── Radar rings (::before / ::after on .agent) ─────────────── */
+.pres-radar {
+  animation: presRadar 3.2s linear infinite;
+}
+.pres-radar-delay {
+  animation: presRadar 3.2s linear infinite 1.6s;
+}
+@keyframes presRadar {
+  0%   { transform: translate(-50%,-50%) scale(.32); opacity: .8; }
+  100% { transform: translate(-50%,-50%) scale(1);   opacity: 0;  }
+}
+
+/* ── Travelling dot on link line ────────────────────────────── */
+.pres-travel {
+  animation: presTravel 2.2s linear infinite;
+}
+.pres-travel-rev {
+  animation: presTravel 2.2s linear infinite reverse;
+}
+@keyframes presTravel {
+  0%   { left: -2%;  opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { left: 102%; opacity: 0; }
+}
+
+/* ── Ping dot (timeline) ────────────────────────────────────── */
+.pres-ping {
+  animation: presPing 2.4s infinite;
+  animation-delay: calc(var(--d, 0) * .25s + .6s);
+}
+@keyframes presPing {
+  0%   { box-shadow: 0 0 0  0   rgba(77,163,255,.55); }
+  70%  { box-shadow: 0 0 0 14px rgba(77,163,255,0);   }
+  100% { box-shadow: 0 0 0  0   rgba(77,163,255,0);   }
+}
+
+/* ── Timeline line draw ─────────────────────────────────────── */
+.pres-draw-line {
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: presDrawLine 1s var(--pres-ease) forwards;
+  animation-delay: calc(var(--d, 0) * .12s + .45s);
+}
+@keyframes presDrawLine { to { transform: scaleX(1); } }
+
+/* ── Spinning halos ─────────────────────────────────────────── */
+.pres-halo {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: min(58vmin, 560px);
+  aspect-ratio: 1;
+  border: 1px dashed rgba(120,170,255,.25);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: presHaloSpin 50s linear infinite;
+}
+.pres-halo-inner {
+  width: min(38vmin, 360px);
+  border-color: rgba(150,130,255,.18);
+  animation: presHaloSpin 36s linear infinite reverse;
+}
+@keyframes presHaloSpin {
+  from { transform: translate(-50%, -52%) rotate(0deg);   }
+  to   { transform: translate(-50%, -52%) rotate(360deg); }
+}
+
+/* ── Page-in fade ───────────────────────────────────────────── */
+.pres-pagein {
+  animation: presPageIn .8s ease both;
+}
+@keyframes presPageIn { from { opacity: 0; } }
+
+/* ── Card spotlight (needs JS to set --mx/--my) ─────────────── */
+.pres-spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .4s;
+  background: radial-gradient(
+    360px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(120,170,255,.10),
+    transparent 42%
+  );
+}
+.pres-spotlight:hover::after { opacity: 1; }
+
+/* ── Progress bar fill ──────────────────────────────────────── */
+.pres-progress-bar {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--pres-blue), var(--pres-violet), var(--pres-teal));
+  transform-origin: 0 50%;
+  transition: transform .6s var(--pres-ease);
+  box-shadow: 0 0 14px rgba(77,163,255,.7);
+}
+
+/* ── Spotlight hover overlay (needs JS to set --mx/--my) ────── */
+.pres-spotlight {
+  position: relative;
+  overflow: hidden;
+}
+.pres-spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .4s;
+  background: radial-gradient(
+    360px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(120,170,255,.10),
+    transparent 42%
+  );
+}
+.pres-spotlight:hover::after { opacity: 1; }
+
+/* ── Tailwind JIT @keyframes registration ───────────────────── */
+/* These names are used via animate-[name] in TSX; declaring them  */
+/* here ensures the JIT compiler can reference them at runtime.    */
+@keyframes gradientShift  { to { background-position: 200% 0; } }
+@keyframes arrowPulse {
+  0%, 100% { opacity: .35; transform: translateX(-4px); }
+  50%       { opacity: 1;   transform: translateX( 4px); }
+}
+@keyframes blink          { 50% { opacity: 0; } }
+@keyframes agentGlow      { 50% { box-shadow: 0 0 90px -14px rgba(77,140,255,.55); } }
+@keyframes radar {
+  0%   { transform: translate(-50%,-50%) scale(.32); opacity: .8; }
+  100% { transform: translate(-50%,-50%) scale(1);   opacity: 0;  }
+}
+@keyframes travel {
+  0%   { left: -2%;  opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { left: 102%; opacity: 0; }
+}
+@keyframes ping {
+  0%   { box-shadow: 0 0 0  0   rgba(77,163,255,.55); }
+  70%  { box-shadow: 0 0 0 14px rgba(77,163,255,0);   }
+  100% { box-shadow: 0 0 0  0   rgba(77,163,255,0);   }
+}
+@keyframes drawLine { to { transform: scaleX(1); } }
+
+/* ── Reduced motion overrides ───────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

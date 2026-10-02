@@ -12,8 +12,8 @@ export function GET() {
     port: httpPort,
     // Display (laptop) connects via localhost — avoids firewall blocking LAN IP self-connections
     wsLocalUrl: `ws://localhost:${WS_PORT}`,
-    // Remote (phone) connects via LAN IP
-    wsUrl: `ws://${ip}:${WS_PORT}`,
+    // Remote (phone) connects via the /ws proxy on port 3000 — no extra firewall rule needed
+    wsUrl: `ws://${ip}:${httpPort}/ws`,
     remoteUrl: `http://${ip}:${httpPort}/remote`,
     displayUrl: `http://${ip}:${httpPort}/display`,
   })

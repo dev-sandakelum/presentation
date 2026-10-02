@@ -1,43 +1,72 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { QrCode } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useStageLink } from '@/hooks/useStageLink'
+import SlideBackground from '@/components/display/SlideBackground'
+import '@/app/presentation-animations.css'
 
-// ── Presentation data ─────────────────────────────────────────────────────────
+// Azure AI session slide components
+import Slide01Title              from '@/components/display/scenes/Slide01Title'
+import Slide02Hook               from '@/components/display/scenes/Slide02Hook'
+import Slide03ThoughtExperiment  from '@/components/display/scenes/Slide03ThoughtExperiment'
+import Slide04Foundation         from '@/components/display/scenes/Slide04Foundation'
+import Slide05PromptEngineering  from '@/components/display/scenes/Slide05PromptEngineering'
+import Slide06TurningPoint       from '@/components/display/scenes/Slide06TurningPoint'
+import Slide07AddKnowledge       from '@/components/display/scenes/Slide07AddKnowledge'
+import Slide08CampusMate         from '@/components/display/scenes/Slide08CampusMate'
+import Slide09AILesson           from '@/components/display/scenes/Slide09AILesson'
+import Slide10GiveItTools        from '@/components/display/scenes/Slide10GiveItTools'
+import Slide11Ingredients        from '@/components/display/scenes/Slide11Ingredients'
+import Slide12Azure              from '@/components/display/scenes/Slide12Azure'
+import Slide13LiveBuild          from '@/components/display/scenes/Slide13LiveBuild'
+import Slide14Architecture       from '@/components/display/scenes/Slide14Architecture'
+import Slide15Challenge          from '@/components/display/scenes/Slide15Challenge'
+import Slide16ResponsibleAI      from '@/components/display/scenes/Slide16ResponsibleAI'
+import Slide17Journey            from '@/components/display/scenes/Slide17Journey'
+import Slide18Closing            from '@/components/display/scenes/Slide18Closing'
 
-const concepts = [
-  { eyebrow: 'CONCEPT 01', name: 'Repository',   color: 'cyan',    definition: 'The home for your project — every file, every commit, the entire history.',                                     related: ['Clone', 'Remote', 'Fork']    },
-  { eyebrow: 'CONCEPT 02', name: 'Commit',        color: 'violet',  definition: 'A snapshot of your project at a specific point in time, with a message explaining what changed.',              related: ['History', 'Diff', 'SHA']     },
-  { eyebrow: 'CONCEPT 03', name: 'Branch',        color: 'amber',   definition: 'An independent line of development. Work in isolation, then merge when ready.',                                related: ['Main', 'Checkout', 'Merge']  },
-  { eyebrow: 'CONCEPT 04', name: 'Pull Request',  color: 'pink',    definition: 'A proposal to merge your branch into another. The place for code review and discussion.',                     related: ['Review', 'Approve', 'Merge'] },
-  { eyebrow: 'CONCEPT 05', name: 'Issue',         color: 'emerald', definition: 'A task, bug report, or feature idea tracked right alongside your code.',                                       related: ['Label', 'Milestone', 'Close'] },
+// ── Slide map ─────────────────────────────────────────────────────────────────
+
+const SLIDES = [
+  { key: 'az-01-title',              label: 'Title',              node: <Slide01Title /> },
+  { key: 'az-02-hook',               label: 'The Hook',           node: <Slide02Hook /> },
+  { key: 'az-03-thought-experiment', label: 'Thought Experiment', node: <Slide03ThoughtExperiment /> },
+  { key: 'az-04-foundation',         label: 'Foundation',         node: <Slide04Foundation /> },
+  { key: 'az-05-prompt-engineering', label: 'Prompt Engineering', node: <Slide05PromptEngineering /> },
+  { key: 'az-06-turning-point',      label: 'Turning Point',      node: <Slide06TurningPoint /> },
+  { key: 'az-07-add-knowledge',      label: 'Add Knowledge',      node: <Slide07AddKnowledge /> },
+  { key: 'az-08-campusmate',         label: 'CampusMate',         node: <Slide08CampusMate /> },
+  { key: 'az-09-ai-lesson',          label: 'AI Lesson',          node: <Slide09AILesson /> },
+  { key: 'az-10-give-it-tools',      label: 'Give It Tools',      node: <Slide10GiveItTools /> },
+  { key: 'az-11-ingredients',        label: 'Ingredients',        node: <Slide11Ingredients /> },
+  { key: 'az-12-azure',              label: 'Azure',              node: <Slide12Azure /> },
+  { key: 'az-13-live-build',         label: 'Live Build',         node: <Slide13LiveBuild /> },
+  { key: 'az-14-architecture',       label: 'Architecture',       node: <Slide14Architecture /> },
+  { key: 'az-15-challenge',          label: 'Challenge',          node: <Slide15Challenge /> },
+  { key: 'az-16-responsible-ai',     label: 'Responsible AI',     node: <Slide16ResponsibleAI /> },
+  { key: 'az-17-journey',            label: 'The Journey',        node: <Slide17Journey /> },
+  { key: 'az-18-closing',            label: 'Closing',            node: <Slide18Closing /> },
 ]
 
-const colorMap: Record<string, { text: string; bg: string; border: string }> = {
-  cyan:    { text: 'text-cyan-300',    bg: 'bg-cyan-300',    border: 'border-cyan-300/20'    },
-  violet:  { text: 'text-violet-300',  bg: 'bg-violet-300',  border: 'border-violet-300/20'  },
-  amber:   { text: 'text-amber-300',   bg: 'bg-amber-300',   border: 'border-amber-300/20'   },
-  pink:    { text: 'text-pink-300',    bg: 'bg-pink-300',    border: 'border-pink-300/20'    },
-  emerald: { text: 'text-emerald-300', bg: 'bg-emerald-300', border: 'border-emerald-300/20' },
-}
+const SLIDE_KEYS  = SLIDES.map((s) => s.key)
+const SLIDE_MAP   = Object.fromEntries(SLIDES.map((s) => [s.key, s.node]))
+const TOTAL       = SLIDES.length
 
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function DisplayPage() {
-  const [wsUrl,       setWsUrl]       = useState<string | null>(null)
-  const [remoteUrl,   setRemoteUrl]   = useState('')
-  const [qrDataUrl,   setQrDataUrl]   = useState('')
-  const [showQr,      setShowQr]      = useState(false)
-  const [conceptIdx,  setConceptIdx]  = useState(0)
+  const [wsUrl,     setWsUrl]     = useState<string | null>(null)
+  const [remoteUrl, setRemoteUrl] = useState('')
+  const [qrDataUrl, setQrDataUrl] = useState('')
+  const [showQr,    setShowQr]    = useState(false)
+  const [showPicker, setShowPicker] = useState(false)
 
-  // Transition state — only CSS, no JSX in state
-  const [sceneKey,    setSceneKey]    = useState('welcome')
-  const [visible,     setVisible]     = useState(true)
-  const autoRef   = useRef<ReturnType<typeof setInterval> | null>(null)
-  const prevKey   = useRef('welcome')
+  const [idx,     setIdx]     = useState(0)
+  const [visible, setVisible] = useState(true)
+  const [dir,     setDir]     = useState<'fwd' | 'back'>('fwd')
+  const prevIdx = useRef(0)
 
-  // Fetch host info once
+  // ── host info + QR ──────────────────────────────────────────────────────────
   useEffect(() => {
     fetch('/api/host-info')
       .then((r) => r.json())
@@ -45,258 +74,285 @@ export default function DisplayPage() {
         setWsUrl(d.wsLocalUrl)
         setRemoteUrl(d.remoteUrl)
         const QRCode = (await import('qrcode')).default
-        const url = await QRCode.toDataURL(d.remoteUrl, {
+        setQrDataUrl(await QRCode.toDataURL(d.remoteUrl, {
           width: 220, margin: 2,
           color: { dark: '#07080d', light: '#a5f3fc' },
-        })
-        setQrDataUrl(url)
+        }))
       })
       .catch(() => setWsUrl('ws://localhost:4821'))
   }, [])
 
-  // onState is stable — stored in a ref so it never causes reconnects
-  const onStateRef = useRef<(key: string, ctrl?: string) => void>(() => {})
-  onStateRef.current = (key: string, ctrl?: string) => {
-    // handle carousel controls immediately (no scene switch)
-    if (key === 'concept-carousel') {
-      if (ctrl === 'next')  setConceptIdx((i) => (i + 1) % concepts.length)
-      if (ctrl === 'prev')  setConceptIdx((i) => (i - 1 + concepts.length) % concepts.length)
-      if (ctrl === 'play') {
-        clearInterval(autoRef.current ?? undefined)
-        autoRef.current = setInterval(() => setConceptIdx((i) => (i + 1) % concepts.length), 4000)
+  // ── transition helper ───────────────────────────────────────────────────────
+  const goTo = useCallback((n: number) => {
+    const next = Math.max(0, Math.min(TOTAL - 1, n))
+    if (next === prevIdx.current) return
+    setDir(next > prevIdx.current ? 'fwd' : 'back')
+    prevIdx.current = next
+    setVisible(false)
+    setTimeout(() => { setIdx(next); setVisible(true) }, 220)
+  }, [])
+
+  const goNext = useCallback(() => goTo(prevIdx.current + 1), [goTo])
+  const goPrev = useCallback(() => goTo(prevIdx.current - 1), [goTo])
+
+  // ── keyboard ────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handle = (e: KeyboardEvent) => {
+      if (showPicker) {
+        if (e.key === 'Escape') setShowPicker(false)
+        return
       }
-      if (ctrl === 'pause' || ctrl === 'stop') {
-        clearInterval(autoRef.current ?? undefined)
-        autoRef.current = null
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault(); goNext()
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault(); goPrev()
+      } else if (e.key === 'Home') {
+        e.preventDefault(); goTo(0)
+      } else if (e.key === 'End') {
+        e.preventDefault(); goTo(TOTAL - 1)
+      } else if (e.key.toLowerCase() === 'f') {
+        document.fullscreenElement
+          ? document.exitFullscreen?.()
+          : document.documentElement.requestFullscreen?.()
+      } else if (e.key.toLowerCase() === 'g') {
+        setShowPicker((v) => !v)
+      } else if (e.key.toLowerCase() === 'q') {
+        setShowQr((v) => !v)
+      } else if (e.key === 'Escape') {
+        setShowQr(false)
       }
     }
+    window.addEventListener('keydown', handle)
+    return () => window.removeEventListener('keydown', handle)
+  }, [goNext, goPrev, goTo, showPicker])
 
-    // scene switch — fade out, change key, fade in
-    const nextKey = key + (key === 'concept-carousel' ? '' : '')
-    if (nextKey === prevKey.current) return
-    prevKey.current = nextKey
-    setVisible(false)
-    setTimeout(() => {
-      setSceneKey(nextKey)
-      setVisible(true)
-    }, 220)
+  // ── touch swipe ─────────────────────────────────────────────────────────────
+  const touchX = useRef(0)
+  const onTouchStart = (e: React.TouchEvent) => { touchX.current = e.changedTouches[0].screenX }
+  const onTouchEnd   = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].screenX - touchX.current
+    if (Math.abs(dx) > 60) dx < 0 ? goNext() : goPrev()
   }
 
+  // ── hide/show controls on mouse idle ────────────────────────────────────────
+  const [ctrlVisible, setCtrlVisible] = useState(true)
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const resetIdle = useCallback(() => {
+    setCtrlVisible(true)
+    if (idleTimer.current) clearTimeout(idleTimer.current)
+    idleTimer.current = setTimeout(() => setCtrlVisible(false), 3000)
+  }, [])
+  useEffect(() => { resetIdle(); return () => { if (idleTimer.current) clearTimeout(idleTimer.current) } }, [resetIdle])
+
+  // ── WebSocket remote (still works when network is available) ─────────────────
+  const onStateRef = useRef<(key: string) => void>(() => {})
+  onStateRef.current = (key: string) => {
+    const n = SLIDE_KEYS.indexOf(key)
+    if (n >= 0) goTo(n)
+  }
   const { state } = useStageLink({
     wsUrl,
-    // stable callback via ref — never triggers reconnect
-    onState: (s) => onStateRef.current(
-      s.scene.type,
-      s.scene.type === 'concept-carousel' ? s.scene.control : undefined
-    ),
+    onState: (s) => onStateRef.current(s.scene.type),
   })
+  void state
 
-  useEffect(() => () => clearInterval(autoRef.current ?? undefined), [])
-
-  const scene   = state.scene
-  const concept = concepts[conceptIdx]
-  const colors  = colorMap[concept.color]
+  const currentSlide = SLIDE_MAP[SLIDE_KEYS[idx]]
+  const progress = (idx + 1) / TOTAL
 
   return (
-    <main className="relative flex min-h-screen flex-col justify-between overflow-hidden bg-[#07080d] p-8 text-white select-none md:p-14">
+    <>
+      <main
+        className="pres-pagein relative flex min-h-screen flex-col overflow-hidden bg-[#04070f] text-white select-none"
+        onMouseMove={resetIdle}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        {/* ── all background fx from 1.html ── */}
+        <SlideBackground />
 
-      {/* ambient */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute right-0 top-0 size-[600px] rounded-full bg-cyan-500/5 blur-[120px]" />
-        <div className="absolute bottom-0 left-1/4 size-[500px] rounded-full bg-violet-500/5 blur-[100px]" />
-      </div>
-
-      {/* QR trigger — tiny, bottom-right corner, only visible on hover */}
-      <div className="relative flex justify-end">
-        <button
-          onClick={() => setShowQr((v) => !v)}
-          className="opacity-0 hover:opacity-40 transition-opacity rounded-full border border-white/10 px-3 py-1.5 font-mono text-[9px] text-slate-600"
+        {/* ── slide content ── */}
+        <div
+          className={`relative z-10 flex flex-1 flex-col justify-center px-8 py-10 md:px-14 md:py-12 transition-[opacity,transform,filter] duration-[220ms] ease-in-out ${
+            visible
+              ? (dir === 'fwd' ? 'pres-slide-enter' : 'pres-slide-enter-back')
+              : (dir === 'fwd' ? 'pres-slide-exit'  : 'pres-slide-exit-back')
+          }`}
+          style={{
+            opacity:    visible ? 1 : 0,
+            transform:  visible ? 'none' : dir === 'fwd' ? 'translateY(-7vh) scale(.98)' : 'translateY(7vh) scale(.98)',
+            filter:     visible ? 'none' : 'blur(14px)',
+            transition: 'opacity 220ms ease, transform 220ms ease, filter 220ms ease',
+          }}
         >
-          QR
-        </button>
-      </div>
+          <div className="relative mx-auto w-full max-w-6xl">
+            {currentSlide}
+          </div>
+        </div>
 
-      {/* ── QR overlay ── */}
-      {showQr && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#07080d]/95 backdrop-blur-sm">
-          <div className="text-center">
-            <div className="mb-6 font-mono text-xs tracking-[0.3em] text-cyan-300">SCAN TO OPEN REMOTE ON YOUR PHONE</div>
-            {qrDataUrl
-              ? <img src={qrDataUrl} alt="Remote QR code" className="mx-auto rounded-2xl" style={{ width: 220, height: 220 }} />
-              : <div className="mx-auto size-[220px] animate-pulse rounded-2xl bg-white/5" />
-            }
-            <div className="mt-6 font-mono text-sm text-slate-300">{remoteUrl}</div>
-            <button onClick={() => setShowQr(false)} className="mt-8 rounded-full border border-white/10 px-6 py-2 text-sm text-slate-400 hover:bg-white/10">
-              Close
+        {/* ── click zones (left / right half) ── */}
+        <button
+          onClick={goPrev}
+          aria-label="Previous slide"
+          className="fixed left-0 top-0 h-full w-[12%] cursor-w-resize opacity-0"
+        />
+        <button
+          onClick={goNext}
+          aria-label="Next slide"
+          className="fixed right-0 top-0 h-full w-[12%] cursor-e-resize opacity-0"
+        />
+
+        {/* ── bottom control bar (fades on idle) ── */}
+        <div
+          className="fixed bottom-0 left-0 right-0 z-20 transition-opacity duration-500"
+          style={{ opacity: ctrlVisible ? 1 : 0, pointerEvents: ctrlVisible ? 'auto' : 'none' }}
+        >
+          {/* progress bar */}
+          <div className="h-[2px] w-full bg-white/[0.07]">
+            <div
+              className="h-full bg-gradient-to-r from-blue-400 via-violet-400 to-teal-400 transition-all duration-500"
+              style={{ width: `${progress * 100}%` }}
+            />
+          </div>
+
+          {/* bar */}
+          <div className="flex items-center gap-3 bg-[#04070f]/80 px-5 py-3 backdrop-blur-md">
+            {/* prev */}
+            <button
+              onClick={goPrev}
+              disabled={idx === 0}
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 font-mono text-[11px] text-slate-400 transition hover:bg-white/[0.09] hover:text-white disabled:opacity-30 active:scale-95"
+            >
+              ← Prev
+            </button>
+
+            {/* counter — click to open picker */}
+            <button
+              onClick={() => setShowPicker((v) => !v)}
+              className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 font-mono text-[11px] text-slate-300 transition hover:bg-white/[0.09] hover:text-white"
+            >
+              <span className="text-blue-400">{String(idx + 1).padStart(2, '0')}</span>
+              <span className="text-slate-600">/</span>
+              <span>{String(TOTAL).padStart(2, '0')}</span>
+              <span className="ml-1 text-slate-500">·</span>
+              <span className="max-w-[160px] truncate text-slate-400">{SLIDES[idx].label}</span>
+            </button>
+
+            {/* next */}
+            <button
+              onClick={goNext}
+              disabled={idx === TOTAL - 1}
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 font-mono text-[11px] text-slate-400 transition hover:bg-white/[0.09] hover:text-white disabled:opacity-30 active:scale-95"
+            >
+              Next →
+            </button>
+
+            {/* spacer */}
+            <div className="flex-1" />
+
+            {/* fullscreen */}
+            <button
+              onClick={() => document.fullscreenElement ? document.exitFullscreen?.() : document.documentElement.requestFullscreen?.()}
+              className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 font-mono text-[11px] text-slate-500 transition hover:bg-white/[0.09] hover:text-white"
+              title="F — toggle fullscreen"
+            >
+              ⛶ Full
+            </button>
+
+            {/* QR */}
+            <button
+              onClick={() => setShowQr((v) => !v)}
+              className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 font-mono text-[11px] text-slate-500 transition hover:bg-white/[0.09] hover:text-white"
+              title="Q — remote QR"
+            >
+              QR
             </button>
           </div>
         </div>
-      )}
 
-      {/* ── scene ── */}
-      <div
-        className="relative mx-auto w-full max-w-6xl"
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0px)' : 'translateY(16px)',
-          transition: 'opacity 220ms ease, transform 220ms ease',
-        }}
-      >
-        <div className="mb-6 font-mono text-xs tracking-[0.3em] text-cyan-300/50">
-          GITHUB FUNDAMENTALS · SESSION 01
+        {/* ── dot nav (right edge) ── */}
+        <nav
+          className="fixed right-4 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2 transition-opacity duration-500"
+          style={{ opacity: ctrlVisible ? 1 : 0, pointerEvents: ctrlVisible ? 'auto' : 'none' }}
+          aria-label="Slide navigation dots"
+        >
+          {SLIDES.map((s, n) => (
+            <button
+              key={s.key}
+              onClick={() => goTo(n)}
+              title={s.label}
+              className={`rounded-full transition-all duration-300 ${
+                n === idx
+                  ? 'h-6 w-[7px] bg-gradient-to-b from-blue-400 to-violet-400 shadow-[0_0_10px_rgba(96,165,250,0.6)]'
+                  : 'h-[7px] w-[7px] bg-white/20 hover:bg-white/50'
+              }`}
+            />
+          ))}
+        </nav>
+
+        {/* ── hint (top-right, fades with controls) ── */}
+        <div
+          className="fixed right-16 top-5 z-20 font-mono text-[10px] tracking-[0.16em] uppercase text-white/30 transition-opacity duration-500"
+          style={{ opacity: ctrlVisible ? 1 : 0 }}
+        >
+          ← → navigate · F fullscreen · G slides · Q remote
         </div>
 
-        {/* WELCOME */}
-        {sceneKey === 'welcome' && (
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/5 px-4 py-1.5 font-mono text-xs text-cyan-300">
-              SESSION 01 · INTRODUCTION
-            </div>
-            <h1 className="max-w-4xl text-7xl font-semibold tracking-[-0.055em] md:text-[108px]">
-              Build in<br /><span className="text-cyan-300">public.</span>
-            </h1>
-            <p className="mt-8 max-w-xl text-xl text-slate-400 md:text-2xl">
-              Everything you need to know about GitHub — from your first repo to your first pull request.
-            </p>
-            <div className="mt-10 flex flex-wrap gap-3">
-              {['Repositories', 'Commits', 'Branches', 'Pull Requests', 'Issues'].map((t) => (
-                <span key={t} className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-500">{t}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* CONCEPT CAROUSEL */}
-        {sceneKey === 'concept-carousel' && (
-          <div>
-            <div className={`mb-5 font-mono text-xs tracking-[0.25em] ${colors.text}`}>{concept.eyebrow}</div>
-            <h1 className={`max-w-4xl text-7xl font-semibold tracking-[-0.055em] md:text-[108px] ${colors.text}`}>
-              {concept.name}
-            </h1>
-            <p className="mt-8 max-w-2xl text-2xl leading-relaxed text-slate-300 md:text-3xl">
-              {concept.definition}
-            </p>
-            <div className="mt-10 flex gap-3">
-              {concept.related.map((item) => (
-                <span key={item} className="rounded-xl border border-white/10 bg-white/[0.04] px-5 py-2.5 font-mono text-sm text-slate-400">
-                  {item}
-                </span>
-              ))}
-            </div>
-            <div className="mt-10 flex gap-2">
-              {concepts.map((_, i) => (
-                <span key={i} className={`h-1 w-8 rounded-full transition-all duration-500 ${i === conceptIdx ? `${colors.bg}` : 'bg-white/10'}`} />
-              ))}
+        {/* ── slide picker overlay ── */}
+        {showPicker && (
+          <div
+            className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 pb-20 backdrop-blur-sm"
+            onClick={(e) => e.target === e.currentTarget && setShowPicker(false)}
+          >
+            <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#080f20]/95 p-5 shadow-2xl backdrop-blur-xl">
+              <div className="mb-4 flex items-center justify-between">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-blue-400">Jump to slide</span>
+                <button onClick={() => setShowPicker(false)} className="font-mono text-[11px] text-slate-500 hover:text-white">✕ Esc</button>
+              </div>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                {SLIDES.map((s, n) => (
+                  <button
+                    key={s.key}
+                    onClick={() => { goTo(n); setShowPicker(false) }}
+                    className={`rounded-xl border px-3 py-2.5 text-left transition active:scale-95 ${
+                      n === idx
+                        ? 'border-blue-400/50 bg-blue-400/10 text-blue-300'
+                        : 'border-white/10 bg-white/[0.03] text-slate-400 hover:border-white/25 hover:bg-white/[0.07] hover:text-white'
+                    }`}
+                  >
+                    <div className="font-mono text-[9px] text-slate-600">{String(n + 1).padStart(2, '0')}</div>
+                    <div className="mt-1 text-[11px] font-medium leading-tight">{s.label}</div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
-        {/* DEMO */}
-        {sceneKey === 'demo-loading' && (
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/5 px-4 py-1.5 font-mono text-xs text-amber-300">LIVE DEMO</div>
-            <h1 className="max-w-4xl text-7xl font-semibold tracking-[-0.055em] md:text-[108px]">
-              Switching to<br /><span className="text-amber-300">live demo.</span>
-            </h1>
-            <p className="mt-8 text-xl text-slate-500">Sharing screen in just a moment…</p>
-            <div className="mt-10 flex items-center gap-3">
-              <span className="size-2 animate-bounce rounded-full bg-amber-300" style={{ animationDelay: '0ms' }} />
-              <span className="size-2 animate-bounce rounded-full bg-amber-300" style={{ animationDelay: '150ms' }} />
-              <span className="size-2 animate-bounce rounded-full bg-amber-300" style={{ animationDelay: '300ms' }} />
+        {/* ── QR overlay ── */}
+        {showQr && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#04070f]/92 backdrop-blur-sm"
+            onClick={(e) => e.target === e.currentTarget && setShowQr(false)}
+          >
+            <div className="text-center">
+              <div className="mb-6 font-mono text-xs tracking-[0.3em] text-blue-400">
+                SCAN TO OPEN REMOTE ON YOUR PHONE
+              </div>
+              {qrDataUrl
+                ? <img src={qrDataUrl} alt="Remote QR code" className="mx-auto rounded-2xl" style={{ width: 220, height: 220 }} />
+                : <div className="mx-auto size-[220px] animate-pulse rounded-2xl bg-white/5" />
+              }
+              <div className="mt-6 font-mono text-sm text-slate-300">{remoteUrl}</div>
+              <button
+                onClick={() => setShowQr(false)}
+                className="mt-8 rounded-full border border-white/10 px-6 py-2 text-sm text-slate-400 hover:bg-white/10"
+              >
+                Close
+              </button>
             </div>
           </div>
         )}
-
-        {/* POLL */}
-        {sceneKey === 'poll-live' && (
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-300/20 bg-blue-300/5 px-4 py-1.5 font-mono text-xs text-blue-300">LIVE POLL</div>
-            <h1 className="mb-10 max-w-3xl text-6xl font-semibold tracking-[-0.04em] text-blue-200 md:text-8xl">
-              Have you used Git before?
-            </h1>
-            <div className="max-w-2xl space-y-5">
-              {[
-                { label: 'Never used Git',   pct: 28 },
-                { label: 'Used it a little', pct: 45 },
-                { label: 'Use it every day', pct: 27 },
-              ].map((opt) => (
-                <div key={opt.label}>
-                  <div className="mb-2 flex justify-between text-sm text-slate-300">
-                    <span>{opt.label}</span>
-                    <span className="font-mono text-blue-300">{opt.pct}%</span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-white/5">
-                    <div className="h-2 rounded-full bg-blue-400/70 transition-all duration-1000" style={{ width: `${opt.pct}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* RECAP */}
-        {sceneKey === 'recap' && (
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-pink-300/20 bg-pink-300/5 px-4 py-1.5 font-mono text-xs text-pink-300">SESSION RECAP</div>
-            <h1 className="mb-12 text-7xl font-semibold tracking-[-0.055em] md:text-[108px]">
-              What we<br /><span className="text-pink-300">covered.</span>
-            </h1>
-            <div className="grid max-w-3xl grid-cols-3 gap-8">
-              {[
-                { value: '5', label: 'Core concepts', sub: 'Repo · Commit · Branch · PR · Issue' },
-                { value: '3', label: 'Live demos',    sub: 'Create · Commit · Open a PR' },
-                { value: '1', label: 'Real repo',     sub: 'You pushed real code today' },
-              ].map((stat) => (
-                <div key={stat.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-                  <div className="text-5xl font-semibold text-pink-300">{stat.value}</div>
-                  <div className="mt-2 text-sm font-medium text-slate-200">{stat.label}</div>
-                  <div className="mt-1 text-xs text-slate-600">{stat.sub}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* CLOSING */}
-        {sceneKey === 'closing' && (
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/5 px-4 py-1.5 font-mono text-xs text-emerald-300">THAT'S A WRAP</div>
-            <h1 className="max-w-4xl text-7xl font-semibold tracking-[-0.055em] md:text-[108px]">
-              Keep building<br /><span className="text-emerald-300">in public.</span>
-            </h1>
-            <p className="mt-8 max-w-xl text-xl text-slate-400">
-              You have a GitHub account, a repo, and your first commit. The rest is just practice.
-            </p>
-            <div className="mt-10 grid max-w-lg grid-cols-2 gap-4 text-sm">
-              {[
-                { label: 'Next session', value: 'Session 02 — Collaboration' },
-                { label: 'Homework',     value: 'Push one more commit this week' },
-                { label: 'Questions?',   value: 'Open an Issue in the class repo' },
-                { label: 'Resources',   value: 'docs.github.com/get-started' },
-              ].map((item) => (
-                <div key={item.label} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                  <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-emerald-300/70">{item.label}</div>
-                  <div className="text-slate-300">{item.value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* MESSAGE */}
-        {sceneKey === 'message' && scene.type === 'message' && (
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-4 py-1.5 font-mono text-xs text-slate-400">ANNOUNCEMENT</div>
-            <h1 className="max-w-4xl text-6xl font-semibold tracking-[-0.04em] md:text-8xl">{scene.text}</h1>
-            {scene.sub && <p className="mt-8 max-w-2xl text-2xl text-slate-400">{scene.sub}</p>}
-          </div>
-        )}
-      </div>
-
-      {/* ── footer ── */}
-      <div className="relative font-mono text-[10px] tracking-[0.18em] text-slate-800">
-        <span>STAGE 01 / {sceneKey.toUpperCase()}</span>
-      </div>
-    </main>
+      </main>
+    </>
   )
 }

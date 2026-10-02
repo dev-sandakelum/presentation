@@ -31,6 +31,11 @@ export function useStageLink({ wsUrl, onState }: UseStageLinkOptions): UseStageL
   const pingTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const mountedRef = useRef(true)
 
+  // Keep onState in a ref so it never needs to be a dep of `connect`.
+  // This prevents a reconnect loop when the caller passes an inline arrow function.
+  const onStateRef = useRef(onState)
+  onStateRef.current = onState
+
   const connect = useCallback(() => {
     if (!wsUrl || !mountedRef.current) return
 
@@ -62,10 +67,10 @@ export function useStageLink({ wsUrl, onState }: UseStageLinkOptions): UseStageL
 
       if (msg.type === 'state') {
         setState(msg.state)
-        onState?.(msg.state)
+        // Always call the latest version of onState via the ref — never stale
+        onStateRef.current?.(msg.state)
         setStatus('ready')
       } else if (msg.type === 'ack') {
-        // ack just confirms delivery — state update comes via the broadcast
         setLastAckAt(msg.updatedAt)
         setStatus('ready')
       }
@@ -82,7 +87,7 @@ export function useStageLink({ wsUrl, onState }: UseStageLinkOptions): UseStageL
     ws.onerror = () => {
       ws.close()
     }
-  }, [wsUrl, onState])
+  }, [wsUrl]) // onState intentionally excluded — accessed via ref
 
   useEffect(() => {
     mountedRef.current = true

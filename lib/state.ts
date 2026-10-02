@@ -12,6 +12,25 @@ export type DisplayScene =
   | { type: 'recap'; primary: number; secondary: number; rate: number }
   | { type: 'message'; text: string; sub?: string }
   | { type: 'concept-card'; index: number; total: number }
+  // Azure AI session slides
+  | { type: 'az-01-title' }
+  | { type: 'az-02-hook' }
+  | { type: 'az-03-thought-experiment' }
+  | { type: 'az-04-foundation' }
+  | { type: 'az-05-prompt-engineering' }
+  | { type: 'az-06-turning-point' }
+  | { type: 'az-07-add-knowledge' }
+  | { type: 'az-08-campusmate' }
+  | { type: 'az-09-ai-lesson' }
+  | { type: 'az-10-give-it-tools' }
+  | { type: 'az-11-ingredients' }
+  | { type: 'az-12-azure' }
+  | { type: 'az-13-live-build' }
+  | { type: 'az-14-architecture' }
+  | { type: 'az-15-challenge' }
+  | { type: 'az-16-responsible-ai' }
+  | { type: 'az-17-journey' }
+  | { type: 'az-18-closing' }
 
 export type DisplayState = {
   scene: DisplayScene

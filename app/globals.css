@@ -165,3 +165,22 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ── Custom scrollbar — remote slide list ─────────────────── */
+.remote-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(96, 165, 250, 0.25) transparent;
+}
+.remote-scroll::-webkit-scrollbar {
+  width: 3px;
+}
+.remote-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.remote-scroll::-webkit-scrollbar-thumb {
+  background: rgba(96, 165, 250, 0.22);
+  border-radius: 99px;
+}
+.remote-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(96, 165, 250, 0.45);
+}
