@@ -28,6 +28,46 @@ const azureScenes = [
   { type: 'az-18-closing'            as const, label: 'Closing',            description: "Don't just use AI"              },
 ]
 
+// ── Next.js Unlocked slide list ──────────────────────────────────────────────
+
+const nxScenes = [
+  { type: 'nx-01-title'                as const, label: 'Title',                    description: 'Next.js Unlocked'                       },
+  { type: 'nx-02-presenter'            as const, label: 'Presenter',                description: 'Introducing your host'                   },
+  { type: 'nx-03-agenda'               as const, label: 'Agenda',                   description: 'What we\'ll cover today'                 },
+  { type: 'nx-04-what-is-nextjs'       as const, label: 'What is Next.js?',         description: 'The React framework for the web'         },
+  { type: 'nx-05-react-baseline'       as const, label: 'React Baseline',           description: 'Did you know about React?'               },
+  { type: 'nx-06-library-vs-framework' as const, label: 'Library vs Framework',     description: 'The key insight'                         },
+  { type: 'nx-07-csr'                  as const, label: 'CSR',                      description: 'How React works — Client-Side Rendering' },
+  { type: 'nx-08-ssr'                  as const, label: 'SSR',                      description: 'Server-Side Rendering explained'         },
+  { type: 'nx-09-react-vs-nextjs'      as const, label: 'React vs Next.js',         description: 'Head to head comparison'                 },
+  { type: 'nx-10-new-features'         as const, label: 'New Features',             description: 'What\'s new in Next.js 13+'              },
+  { type: 'nx-11-app-router'           as const, label: 'App Router',               description: 'Deep dive — file-based routing'          },
+  { type: 'nx-12-routing-patterns'     as const, label: 'Routing Patterns',         description: 'Three ways to shape a route'             },
+  { type: 'nx-13-server-components'    as const, label: 'Server Components',        description: 'The new default — RSC'                   },
+  { type: 'nx-14-server-client-boundary' as const, label: 'Server/Client Boundary', description: 'Where the line is drawn'                 },
+  { type: 'nx-15-data-fetching'        as const, label: 'Data Fetching',            description: 'Before & after — async components'      },
+  { type: 'nx-16-create-command'       as const, label: 'Create Command',           description: 'One command to start'                    },
+  { type: 'nx-17-create-result'        as const, label: 'Create Result',            description: 'What gets scaffolded'                    },
+  { type: 'nx-18-file-structure'       as const, label: 'File Structure',           description: 'Anatomy of a Next.js project'            },
+  { type: 'nx-19-run-dev-server'       as const, label: 'Run Dev Server',           description: 'npm run dev'                             },
+  { type: 'nx-20-live-demo-phases'     as const, label: 'Live Demo — Phases',       description: 'Five phases — scaffold to full-stack'    },
+  { type: 'nx-21-demo-run-route'       as const, label: 'Demo: Run & Route',        description: 'Phase 1 — scaffold & first route'        },
+  { type: 'nx-22-demo-interactivity'   as const, label: 'Demo: Interactivity',      description: 'Phase 2 — client components'             },
+  { type: 'nx-23-demo-repository'      as const, label: 'Demo: Follow Along',       description: 'Phase 3 — repo & resources'              },
+  { type: 'nx-24-demo-api-and-fetch'   as const, label: 'Demo: API & Fetch',        description: 'Phase 4 — server data & API routes'      },
+  { type: 'nx-25-common-pitfalls'      as const, label: 'Common Pitfalls',          description: 'Mistakes to avoid'                       },
+  { type: 'nx-26-recap'                as const, label: 'Recap',                    description: 'What we covered'                         },
+  { type: 'nx-27-resources'            as const, label: 'Resources',                description: 'Links & further reading'                  },
+  { type: 'nx-28-end'                  as const, label: 'Questions?',               description: 'Part 1 of 3 complete'                    },
+]
+
+// ── Scene list per presentation id ──────────────────────────────────────────
+
+const SCENE_LISTS: Record<string, { type: string; label: string; description: string }[]> = {
+  'azure-ai':        azureScenes,
+  'nextjs-unlocked': nxScenes,
+}
+
 // ── Status helpers ───────────────────────────────────────────────────────────
 
 function statusDot(s: ConnectionStatus) {
@@ -52,7 +92,7 @@ function statusRing(s: ConnectionStatus) {
 interface HostInfo { ip: string; port: number; wsUrl: string; remoteUrl: string; displayUrl: string }
 
 export default function RemotePageClient({ pres }: { pres: PresentationMeta }) {
-  const [wsUrl,   setWsUrl]   = useState<string | null>(null)
+  const [wsUrl,    setWsUrl]    = useState<string | null>(null)
   const [hostInfo, setHostInfo] = useState<HostInfo | null>(null)
   const [lastLabel, setLastLabel] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
@@ -69,33 +109,38 @@ export default function RemotePageClient({ pres }: { pres: PresentationMeta }) {
 
   const { state, status, sendScene } = useStageLink({ wsUrl })
 
-  // ── React presentation (named scene types) ───────────────────────────────
+  // Resolve which scene list to use
+  const scenes = SCENE_LISTS[pres.id] ?? null
+  const isHtml = pres.kind === 'html'
+  const total  = pres.slideCount ?? 1
 
-  function sendAzureScene(scene: DisplayScene, label?: string) {
-    sendScene(scene)
+  // ── Named-scene presentation (react) ────────────────────────────────────
+
+  function sendNamedScene(type: string, label?: string) {
+    sendScene({ type } as DisplayScene)
     if (label) setLastLabel(label)
   }
 
-  const activeAzureType = state.scene.type
-  const azureIdx = azureScenes.findIndex(s => s.type === activeAzureType)
+  const activeType = state.scene.type
+  const activeIdx  = scenes ? scenes.findIndex(s => s.type === activeType) : -1
 
-  function sendAzureAdjacent(dir: 1 | -1) {
-    const types = azureScenes.map(s => s.type)
-    const next = types[Math.max(0, Math.min(types.length - 1, azureIdx + dir))]
-    if (next) sendAzureScene({ type: next } as DisplayScene, azureScenes.find(s => s.type === next)?.label)
+  function sendAdjacent(dir: 1 | -1) {
+    if (!scenes) return
+    const next = scenes[Math.max(0, Math.min(scenes.length - 1, activeIdx + dir))]
+    if (next) sendNamedScene(next.type, next.label)
   }
 
   // sync htmlIdx from WS state
   useEffect(() => {
     if (state.scene.type === 'html-slide') {
-      setHtmlIdx(state.scene.index)
+      setHtmlIdx((state.scene as { type: 'html-slide'; index: number }).index)
     }
   }, [state.scene])
 
   // ── HTML presentation (numeric index) ────────────────────────────────────
 
   function sendHtmlSlide(index: number) {
-    const clamped = Math.max(0, Math.min((pres.slideCount ?? 1) - 1, index))
+    const clamped = Math.max(0, Math.min(total - 1, index))
     setHtmlIdx(clamped)
     sendScene({ type: 'html-slide', index: clamped })
     setLastLabel(`Slide ${clamped + 1}`)
@@ -105,22 +150,26 @@ export default function RemotePageClient({ pres }: { pres: PresentationMeta }) {
   useEffect(() => {
     const el = listRef.current?.querySelector<HTMLElement>('[data-active="true"]')
     el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }, [activeAzureType, htmlIdx])
+  }, [activeType, htmlIdx])
 
-  const isHtml  = pres.kind === 'html'
-  const total   = pres.slideCount ?? 1
   const progress = isHtml
     ? (htmlIdx + 1) / total
-    : (azureIdx >= 0 ? (azureIdx + 1) / azureScenes.length : 0)
+    : scenes && activeIdx >= 0
+      ? (activeIdx + 1) / scenes.length
+      : 0
 
   const currentLabel = isHtml
     ? `Slide ${htmlIdx + 1}`
-    : (azureScenes.find(s => s.type === activeAzureType)?.label ?? activeAzureType.replace(/-/g, ' '))
+    : (scenes?.find(s => s.type === activeType)?.label ?? activeType.replace(/-/g, ' '))
   const currentDesc = isHtml
     ? pres.subtitle
-    : (azureScenes.find(s => s.type === activeAzureType)?.description ?? '')
+    : (scenes?.find(s => s.type === activeType)?.description ?? '')
 
   const accent = pres.color
+
+  // Prev/next disabled states
+  const prevDisabled = isHtml ? htmlIdx <= 0         : activeIdx <= 0
+  const nextDisabled = isHtml ? htmlIdx >= total - 1 : !scenes || activeIdx >= scenes.length - 1
 
   return (
     <main className="h-[100dvh] bg-[#07090f] text-white flex flex-col overflow-hidden select-none">
@@ -158,7 +207,9 @@ export default function RemotePageClient({ pres }: { pres: PresentationMeta }) {
           <div className="truncate font-mono text-[10px] text-slate-600 mt-0.5">{currentDesc}</div>
         </div>
         <div className="font-mono text-[10px] text-slate-600 flex-shrink-0 tabular-nums">
-          {isHtml ? String(htmlIdx + 1).padStart(2, '0') : (azureIdx >= 0 ? String(azureIdx + 1).padStart(2, '0') : '--')}
+          {isHtml
+            ? String(htmlIdx + 1).padStart(2, '0')
+            : activeIdx >= 0 ? String(activeIdx + 1).padStart(2, '0') : '--'}
           <span className="opacity-40"> / {String(total).padStart(2, '0')}</span>
         </div>
       </div>
@@ -171,16 +222,16 @@ export default function RemotePageClient({ pres }: { pres: PresentationMeta }) {
       {/* ── PREV / NEXT ── */}
       <div className="relative z-10 mx-4 mb-4 grid grid-cols-2 gap-3">
         <button
-          onClick={() => isHtml ? sendHtmlSlide(htmlIdx - 1) : sendAzureAdjacent(-1)}
-          disabled={isHtml ? htmlIdx <= 0 : azureIdx <= 0}
+          onClick={() => isHtml ? sendHtmlSlide(htmlIdx - 1) : sendAdjacent(-1)}
+          disabled={prevDisabled}
           className="group relative flex items-center justify-center gap-2 h-16 rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.03] text-slate-300 font-semibold text-base shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_4px_12px_rgba(0,0,0,0.4)] active:scale-[0.96] active:translate-y-[1px] disabled:opacity-30 disabled:pointer-events-none transition-all duration-100 ease-out hover:border-white/20 hover:bg-white/[0.08]"
         >
           <ChevronLeft className="size-5 transition-transform group-active:-translate-x-0.5" />
           Prev
         </button>
         <button
-          onClick={() => isHtml ? sendHtmlSlide(htmlIdx + 1) : sendAzureAdjacent(1)}
-          disabled={isHtml ? htmlIdx >= total - 1 : azureIdx >= azureScenes.length - 1}
+          onClick={() => isHtml ? sendHtmlSlide(htmlIdx + 1) : sendAdjacent(1)}
+          disabled={nextDisabled}
           className="group relative flex items-center justify-center gap-2 h-16 rounded-2xl border font-semibold text-base shadow-[0_4px_12px_rgba(0,0,0,0.4)] active:scale-[0.96] active:translate-y-[1px] disabled:opacity-30 disabled:pointer-events-none transition-all duration-100 ease-out"
           style={{ borderColor: `${accent}50`, background: `linear-gradient(to bottom, ${accent}33, ${accent}1a)`, color: accent }}
         >
@@ -222,23 +273,45 @@ export default function RemotePageClient({ pres }: { pres: PresentationMeta }) {
                 )
               })
             : /* React presentation: named scenes */
-              azureScenes.map((scene, index) => {
-                const isActive = activeAzureType === scene.type
+              (scenes ?? []).map((scene, index) => {
+                const isActive = activeType === scene.type
                 return (
                   <button
                     key={scene.type}
                     data-active={isActive}
-                    onClick={() => sendAzureScene({ type: scene.type } as DisplayScene, scene.label)}
-                    className={`group relative flex w-full items-center gap-3 px-4 py-3.5 text-left transition-all duration-100 ease-out active:scale-[0.985] active:bg-white/[0.06] ${isActive ? 'bg-blue-500/12 text-white' : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-200'}`}
+                    onClick={() => sendNamedScene(scene.type, scene.label)}
+                    className={`group relative flex w-full items-center gap-3 px-4 py-3.5 text-left transition-all duration-100 ease-out active:scale-[0.985] active:bg-white/[0.06] ${isActive ? 'text-white' : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-200'}`}
+                    style={isActive ? { background: `${accent}12` } : undefined}
                   >
-                    {isActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-8 rounded-r-full bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.7)]" />}
-                    <span className={`font-mono text-[11px] tabular-nums w-5 flex-shrink-0 ${isActive ? 'text-blue-400' : 'text-slate-700'}`}>{String(index + 1).padStart(2, '0')}</span>
-                    <span className={`size-1.5 rounded-full flex-shrink-0 transition-all ${isActive ? 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)] scale-125' : 'bg-slate-700 group-active:bg-slate-500'}`} />
+                    {isActive && (
+                      <span
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-8 rounded-r-full"
+                        style={{ background: accent, boxShadow: `0 0 10px ${accent}b3` }}
+                      />
+                    )}
+                    <span
+                      className="font-mono text-[11px] tabular-nums w-5 flex-shrink-0"
+                      style={{ color: isActive ? accent : '#334155' }}
+                    >
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span
+                      className="size-1.5 rounded-full flex-shrink-0 transition-all"
+                      style={{
+                        background: isActive ? accent : '#334155',
+                        boxShadow: isActive ? `0 0 8px ${accent}cc` : undefined,
+                        transform: isActive ? 'scale(1.25)' : undefined,
+                      }}
+                    />
                     <div className="min-w-0 flex-1">
-                      <div className={`text-[14px] font-semibold leading-tight truncate ${isActive ? 'text-white' : ''}`}>{scene.label}</div>
+                      <div className={`text-[14px] font-semibold leading-tight truncate ${isActive ? 'text-white' : ''}`}>
+                        {scene.label}
+                      </div>
                       <div className="truncate text-[11px] text-slate-600 mt-0.5 font-normal">{scene.description}</div>
                     </div>
-                    {isActive && <ChevronRight className="size-4 text-blue-400/60 flex-shrink-0" />}
+                    {isActive && (
+                      <ChevronRight className="size-4 flex-shrink-0" style={{ color: `${accent}99` }} />
+                    )}
                   </button>
                 )
               })

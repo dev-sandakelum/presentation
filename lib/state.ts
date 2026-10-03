@@ -31,6 +31,35 @@ export type DisplayScene =
   | { type: 'az-16-responsible-ai' }
   | { type: 'az-17-journey' }
   | { type: 'az-18-closing' }
+  // Next.js Unlocked slides
+  | { type: 'nx-01-title' }
+  | { type: 'nx-02-presenter' }
+  | { type: 'nx-03-agenda' }
+  | { type: 'nx-04-what-is-nextjs' }
+  | { type: 'nx-05-react-baseline' }
+  | { type: 'nx-06-library-vs-framework' }
+  | { type: 'nx-07-csr' }
+  | { type: 'nx-08-ssr' }
+  | { type: 'nx-09-react-vs-nextjs' }
+  | { type: 'nx-10-new-features' }
+  | { type: 'nx-11-app-router' }
+  | { type: 'nx-12-routing-patterns' }
+  | { type: 'nx-13-server-components' }
+  | { type: 'nx-14-server-client-boundary' }
+  | { type: 'nx-15-data-fetching' }
+  | { type: 'nx-16-create-command' }
+  | { type: 'nx-17-create-result' }
+  | { type: 'nx-18-file-structure' }
+  | { type: 'nx-19-run-dev-server' }
+  | { type: 'nx-20-live-demo-phases' }
+  | { type: 'nx-21-demo-run-route' }
+  | { type: 'nx-22-demo-interactivity' }
+  | { type: 'nx-23-demo-repository' }
+  | { type: 'nx-24-demo-api-and-fetch' }
+  | { type: 'nx-25-common-pitfalls' }
+  | { type: 'nx-26-recap' }
+  | { type: 'nx-27-resources' }
+  | { type: 'nx-28-end' }
   // HTML-iframe based presentations: scene is just a slide index
   | { type: 'html-slide'; index: number }
 
@@ -85,10 +114,9 @@ export const PRESENTATIONS: PresentationMeta[] = [
     id: 'nextjs-unlocked',
     title: 'Next.js Unlocked',
     subtitle: 'Part 1 of 3 — Concepts · Microsoft Learn Student Ambassadors',
-    kind: 'html',
-    htmlPath: '/demo/2.html',
-    slideCount: 17,
-    color: '#3ee6c4',
+    kind: 'react',
+    slideCount: 28,
+    color: '#ffffff',
   },
 ]
 

@@ -1,6 +1,7 @@
 import { PRESENTATIONS } from '@/lib/state'
 import { notFound } from 'next/navigation'
 import ReactDisplayPage from './ReactDisplayPage'
+import NxDisplayPage from './NxDisplayPage'
 import HtmlDisplayPage from './HtmlDisplayPage'
 
 export function generateStaticParams() {
@@ -14,6 +15,9 @@ export default async function DisplayPage({ params }: { params: Promise<{ id: st
 
   if (pres.kind === 'html') {
     return <HtmlDisplayPage pres={pres} />
+  }
+  if (id === 'nextjs-unlocked') {
+    return <NxDisplayPage pres={pres} />
   }
   return <ReactDisplayPage pres={pres} />
 }

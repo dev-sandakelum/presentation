@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>From Prompt to AI Agent — Azure Session</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#04070f; --ink:#e9eefb; --muted:#93a0b8;
+  --line:rgba(148,180,255,.14);
+  --blue:#4da3ff; --violet:#9b8cff; --teal:#3ee6c4;
+  --warn:#ffc86b; --good:#61d6a4;
+  --fd:'Space Grotesk',Inter,sans-serif;
+  --fb:'Inter',system-ui,sans-serif;
+  --fm:'JetBrains Mono',Consolas,monospace;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--fb);-webkit-font-smoothing:antialiased}
+::selection{background:rgba(77,163,255,.35)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+
+/* ============ BACKGROUND FX LAYERS ============ */
+#net{position:fixed;inset:0;z-index:0}
+.aurora{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.aurora .b{position:absolute;border-radius:50%}
+.b1{width:60vmax;height:60vmax;top:-22vmax;right:-16vmax;background:radial-gradient(circle,rgba(37,99,235,.32),rgba(37,99,235,0) 62%);animation:drift1 26s ease-in-out infinite alternate}
+.b2{width:55vmax;height:55vmax;bottom:-24vmax;left:-18vmax;background:radial-gradient(circle,rgba(124,93,250,.26),rgba(124,93,250,0) 62%);animation:drift2 32s ease-in-out infinite alternate}
+.b3{width:38vmax;height:38vmax;bottom:6vmax;right:12vmax;background:radial-gradient(circle,rgba(45,212,191,.14),rgba(45,212,191,0) 60%);animation:drift3 22s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(-8vmax,10vmax) scale(1.15)}}
+@keyframes drift2{to{transform:translate(10vmax,-8vmax) scale(1.1)}}
+@keyframes drift3{to{transform:translate(-6vmax,-10vmax) scale(1.25)}}
+.gridlines{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(130,170,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(130,170,255,.055) 1px,transparent 1px);
+  background-size:54px 54px;animation:gridmove 60s linear infinite;
+  -webkit-mask-image:radial-gradient(ellipse 100% 85% at 50% 42%,#000 25%,transparent 72%);
+  mask-image:radial-gradient(ellipse 100% 85% at 50% 42%,#000 25%,transparent 72%)}
+@keyframes gridmove{to{background-position:54px 54px}}
+.glow{position:fixed;left:0;top:0;width:620px;height:620px;margin:-310px 0 0 -310px;z-index:1;pointer-events:none;border-radius:50%;will-change:transform;
+  background:radial-gradient(circle,rgba(77,140,255,.16),rgba(139,110,255,.08) 42%,transparent 68%)}
+.noise{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+  background:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.vignette{position:fixed;inset:0;z-index:4;pointer-events:none;background:radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(2,5,12,.6) 100%)}
+
+/* ============ DECK & SLIDE TRANSITIONS ============ */
+.deck{position:relative;z-index:2;height:100%;animation:pagein .8s ease both}
+@keyframes pagein{from{opacity:0}}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:9vh 8vw 13vh;
+  opacity:0;pointer-events:none;filter:blur(14px);will-change:transform,opacity,filter;
+  transition:opacity .55s ease,transform .75s var(--ease),filter .55s ease}
+body.fwd  .slide{transform:translateY(6vh) scale(.985)}
+body.back .slide{transform:translateY(-6vh) scale(.985)}
+body.fwd  .slide.leaving{opacity:0;transform:translateY(-7vh) scale(.98);filter:blur(14px);z-index:1}
+body.back .slide.leaving{opacity:0;transform:translateY(7vh) scale(.98);filter:blur(14px);z-index:1}
+body.fwd .slide.active,body.back .slide.active{opacity:1;transform:none;filter:none;z-index:2;pointer-events:auto}
+
+/* staggered element entrances */
+.slide.active .a{animation:rise .9s var(--ease) backwards;animation-delay:calc(var(--d,0)*90ms + .12s)}
+body.back .slide.active .a{animation-name:riseBack}
+@keyframes rise{from{opacity:0;transform:translateY(36px) scale(.98)}}
+@keyframes riseBack{from{opacity:0;transform:translateY(-36px) scale(.98)}}
+
+/* ============ TYPOGRAPHY ============ */
+.kicker{font:600 .72rem var(--fm);letter-spacing:.24em;text-transform:uppercase;color:var(--blue);
+  display:inline-flex;align-items:center;gap:.65rem;margin:0 0 .95rem}
+.kicker::before{content:"";width:26px;height:1px;background:linear-gradient(90deg,transparent,var(--blue));flex:none}
+h1{font:700 clamp(3rem,7.5vw,7rem)/0.98 var(--fd);letter-spacing:-.045em;margin:0;max-width:1100px;text-shadow:0 0 80px rgba(77,163,255,.25)}
+h2{font:700 clamp(2rem,4.6vw,4.4rem)/1.04 var(--fd);letter-spacing:-.04em;margin:0;max-width:1000px;text-wrap:balance}
+h3{font:600 1.05rem var(--fd);letter-spacing:-.01em;margin:0}
+p{font-size:clamp(1rem,1.5vw,1.22rem);line-height:1.65;color:var(--muted);max-width:850px;margin:0;text-wrap:pretty}
+strong{color:var(--ink);font-weight:600}
+.slide > p{margin-top:1.2rem}
+.grad{background:linear-gradient(90deg,#4da3ff,#9b8cff 35%,#3ee6c4 70%,#4da3ff);background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;animation:gshift 7s linear infinite}
+@keyframes gshift{to{background-position:200% 0}}
+.big{font:700 clamp(1.9rem,4.4vw,3.9rem)/1.12 var(--fd);letter-spacing:-.03em;margin-top:2.1rem!important;color:var(--ink)}
+.quote{font:600 clamp(1.7rem,3.6vw,3.4rem)/1.15 var(--fd);letter-spacing:-.025em;max-width:1000px;margin-top:.6rem!important;color:var(--ink)}
+.qmark{font-size:1.5em;line-height:0;vertical-align:-.28em;color:var(--blue);opacity:.85}
+.final{font-size:clamp(1.05rem,1.8vw,1.35rem);max-width:640px}
+.center{align-items:center;text-align:center}
+.center p{margin-left:auto;margin-right:auto}
+
+/* spacing between direct-child blocks */
+.slide > .flow{margin-top:1.8rem}
+.slide > .grid{margin-top:2rem}
+.slide > .compare{margin-top:1.9rem}
+.slide > .challenge{margin-top:1.7rem}
+.slide > .arch{margin-top:1.7rem}
+.slide > .timeline{margin-top:2.6rem}
+.slide > .prompt{margin-top:1.7rem}
+.slide > .code{margin-top:1.7rem}
+.slide > .formula{margin-top:1.5rem}
+.slide > .pillrow{margin-top:2.1rem}
+.slide > .chip{margin-top:1.7rem}
+.slide > .titlerow{margin-top:.2rem}
+
+/* ============ COMPONENTS ============ */
+.titlerow{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:.55rem;padding:.6rem 1.05rem;border-radius:99px;border:1px solid var(--line);
+  background:rgba(255,255,255,.035);font:500 .74rem var(--fm);letter-spacing:.08em;color:var(--muted)}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px var(--teal);animation:blink 2.4s infinite}
+.pillrow{display:flex;gap:.7rem;flex-wrap:wrap;justify-content:center}
+.tag{font:600 .56rem var(--fm);letter-spacing:.18em;color:var(--teal);border:1px solid rgba(62,230,196,.35);
+  background:rgba(62,230,196,.08);padding:.32rem .55rem;border-radius:6px;margin-left:.4rem}
+.live{display:inline-flex;align-items:center;gap:.55rem;padding:.55rem 1rem;border-radius:99px;border:1px solid rgba(255,110,110,.35);
+  background:rgba(255,90,90,.09);color:#ff9d9d;font:600 .66rem var(--fm);letter-spacing:.22em}
+.live i{width:8px;height:8px;border-radius:50%;background:#ff5f56;box-shadow:0 0 12px #ff5f56;animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* flow */
+.flow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.7rem;max-width:1080px;width:100%}
+.node{padding:.9rem 1.2rem;border:1px solid var(--line);background:rgba(255,255,255,.045);border-radius:14px;
+  font:600 1rem var(--fd);transition:transform .35s var(--ease),border-color .3s,box-shadow .3s}
+.node:hover{transform:translateY(-3px);border-color:rgba(148,180,255,.45)}
+.node .idx{font:600 .56rem var(--fm);letter-spacing:.16em;color:var(--blue);margin-right:.6rem}
+.node.glow{border-color:rgba(77,163,255,.5);background:linear-gradient(180deg,rgba(77,140,255,.14),rgba(77,140,255,.03));
+  box-shadow:0 0 28px -6px rgba(77,140,255,.5)}
+.arrow,.plus{line-height:1;user-select:none}
+.arrow{color:var(--blue);font-size:1.25rem}
+.plus{color:var(--teal);font-size:1.35rem;font-weight:600}
+.arrow span{display:block;animation:apulse 1.6s ease-in-out infinite;animation-delay:calc(var(--d,0)*.18s)}
+.plus span{display:block;animation:ppulse 1.9s ease-in-out infinite;animation-delay:calc(var(--d,0)*.18s)}
+@keyframes apulse{0%,100%{opacity:.35;transform:translateX(-4px)}50%{opacity:1;transform:translateX(4px)}}
+@keyframes ppulse{0%,100%{opacity:.4;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+
+/* cards + spotlight hover */
+.card,.compare>div,.challenge>div{position:relative;overflow:hidden}
+.card,.compare>div{transition:transform .45s var(--ease),border-color .35s,box-shadow .45s}
+.card::after,.compare>div::after,.challenge>div::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .4s;
+  background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),rgba(120,170,255,.10),transparent 42%)}
+.card:hover::after,.compare>div:hover::after,.challenge>div:hover::after{opacity:1}
+.card:hover,.compare>div:hover{transform:translateY(-5px);border-color:rgba(120,170,255,.4);box-shadow:0 18px 40px -18px rgba(60,120,255,.35)}
+.card{border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border-radius:18px;padding:1.4rem}
+.card .num{font:600 .62rem var(--fm);letter-spacing:.22em;color:var(--blue);margin-bottom:1rem}
+.card p{font-size:.92rem;margin-top:.45rem}
+.card .icn{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;margin-bottom:1rem;color:var(--blue);
+  background:linear-gradient(135deg,rgba(77,163,255,.18),rgba(139,124,255,.1));border:1px solid var(--line)}
+.icn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;max-width:1150px;width:100%}
+.grid.two{grid-template-columns:repeat(2,1fr);max-width:960px}
+
+/* compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;max-width:1020px;width:100%}
+.compare>div{padding:1.6rem;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+.bad{border-color:rgba(255,200,107,.3)!important}
+.good{border-color:rgba(97,214,164,.35)!important;background:linear-gradient(180deg,rgba(97,214,164,.07),rgba(97,214,164,.015))!important}
+.label{font:600 .66rem var(--fm);letter-spacing:.2em;text-transform:uppercase;display:flex;align-items:center;gap:.55rem;margin-bottom:1rem;color:var(--muted)}
+.ldot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.ldot.warn{background:var(--warn);box-shadow:0 0 10px var(--warn)}
+.ldot.ok{background:var(--good);box-shadow:0 0 10px var(--good)}
+.formula{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem}
+.formula span{font:500 .76rem var(--fm);letter-spacing:.05em;border:1px solid var(--line);background:rgba(255,255,255,.04);padding:.5rem .85rem;border-radius:99px}
+.formula b{color:var(--teal)}
+
+/* terminal / code */
+.prompt,.code{border:1px solid rgba(148,180,255,.16);border-radius:16px;overflow:hidden;max-width:960px;width:100%;
+  background:linear-gradient(180deg,#0a1424,#060b16);box-shadow:0 30px 80px -30px rgba(40,90,200,.45)}
+.bar-dots{display:flex;align-items:center;gap:7px;padding:.7rem 1rem;border-bottom:1px solid var(--line);background:rgba(255,255,255,.03)}
+.bar-dots span{width:10px;height:10px;border-radius:50%}
+.bar-dots span:nth-child(1){background:#ff5f57}.bar-dots span:nth-child(2){background:#febc2e}.bar-dots span:nth-child(3){background:#28c840}
+.bar-dots i{margin-left:auto;font:500 .66rem var(--fm);font-style:normal;letter-spacing:.1em;color:var(--muted)}
+.type p,.prompt p{margin:0;padding:1.5rem 1.6rem;font-family:var(--fm);font-size:clamp(1rem,1.9vw,1.45rem);line-height:1.55;color:#dce8ff;min-height:2.6em;max-width:none}
+.caret{display:inline-block;width:.55ch;min-width:8px;height:1.05em;translate:0 .18em;background:var(--blue);margin-left:.15em;
+  box-shadow:0 0 10px var(--blue);animation:blink 1.05s steps(2,start) infinite}
+.code pre{margin:0;padding:1.4rem 1.6rem;font:400 clamp(.78rem,1.35vw,.98rem)/1.8 var(--fm);color:#dce7f7;white-space:pre-wrap}
+.hl{color:var(--blue);font-weight:600}.gr{color:var(--good)}
+
+/* architecture */
+.arch{display:grid;grid-template-columns:1fr 44px 1.4fr 44px 1fr;gap:.7rem;align-items:center;max-width:1080px;width:100%}
+.arch-side{border:1px solid var(--line);border-radius:20px;padding:1.3rem;background:rgba(255,255,255,.03)}
+.arch-side h3{margin-bottom:.7rem}
+.arch-side p{font-size:.88rem;margin-top:.4rem;padding-left:1rem;position:relative}
+.arch-side p::before{content:"";position:absolute;left:0;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--violet);opacity:.75}
+.arch-side:last-child p::before{background:var(--blue)}
+.agent{position:relative;text-align:center;padding:2.2rem 1.4rem;min-height:230px;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  border:1px solid rgba(98,168,255,.45);border-radius:22px;background:linear-gradient(180deg,rgba(77,140,255,.1),rgba(77,140,255,.02));
+  animation:agentGlow 3.5s ease-in-out infinite}
+@keyframes agentGlow{50%{box-shadow:0 0 90px -14px rgba(77,140,255,.55)}}
+.agent::before,.agent::after{content:"";position:absolute;left:50%;top:50%;width:300%;aspect-ratio:1;border:1px solid rgba(98,168,255,.3);
+  border-radius:50%;pointer-events:none;animation:radar 3.2s linear infinite}
+.agent::after{animation-delay:1.6s}
+@keyframes radar{0%{transform:translate(-50%,-50%) scale(.32);opacity:.8}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
+.agent strong{font:700 2rem var(--fd);letter-spacing:-.02em;position:relative;z-index:1;text-shadow:0 0 30px rgba(77,163,255,.8)}
+.agent span{font-size:.85rem;color:var(--muted);max-width:26ch;margin-top:.6rem;position:relative;z-index:1}
+.link{position:relative;height:2px;background:rgba(148,180,255,.18);border-radius:2px}
+.link::after{content:"";position:absolute;top:-2px;left:0;width:6px;height:6px;border-radius:50%;background:var(--blue);
+  box-shadow:0 0 10px var(--blue);animation:travel 2.2s linear infinite}
+.link.rev::after{animation-direction:reverse}
+@keyframes travel{0%{left:-2%;opacity:0}12%{opacity:1}88%{opacity:1}100%{left:102%;opacity:0}}
+
+/* timeline */
+.timeline{display:flex;max-width:1000px;width:100%}
+.step{flex:1;position:relative;padding:1.5rem .6rem 0;text-align:center}
+.step::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;transform:scaleX(0);transform-origin:left;
+  background:linear-gradient(90deg,rgba(148,180,255,.45),rgba(148,180,255,.08))}
+.slide.active .step::before{animation:draw 1s var(--ease) forwards;animation-delay:calc(var(--d,0)*.12s + .45s)}
+@keyframes draw{to{transform:scaleX(1)}}
+.step:first-child::before{left:50%}
+.step:last-child::before{right:50%}
+.tdot{position:absolute;top:-5px;left:calc(50% - 6px);width:12px;height:12px;border-radius:50%;background:var(--blue)}
+.slide.active .tdot{animation:ping 2.4s infinite;animation-delay:calc(var(--d,0)*.25s + .6s)}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(77,163,255,.55)}70%{box-shadow:0 0 0 14px rgba(77,163,255,0)}100%{box-shadow:0 0 0 0 rgba(77,163,255,0)}}
+.step b{display:block;font:600 .95rem var(--fd)}
+.step span{display:block;color:var(--muted);font-size:.74rem;margin-top:.45rem;letter-spacing:.04em}
+
+/* challenge */
+.challenge{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;max-width:980px;width:100%}
+.challenge>div{display:flex;gap:1rem;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:1.05rem 1.15rem;
+  background:rgba(255,255,255,.03);transition:transform .3s var(--ease),border-color .3s,background .3s}
+.challenge>div:hover{transform:translateY(-3px);border-color:rgba(148,180,255,.35);background:rgba(255,255,255,.05)}
+.challenge .n{font:600 .66rem var(--fm);color:var(--blue);padding-top:.2rem}
+.challenge small{display:block;color:var(--muted);margin-top:.3rem;font-size:.82rem;font-weight:400}
+
+/* hero halos */
+.halo{position:absolute;left:50%;top:50%;width:min(58vmin,560px);aspect-ratio:1;border:1px dashed rgba(120,170,255,.25);
+  border-radius:50%;pointer-events:none;animation:spin 50s linear infinite}
+.halo.two{width:min(38vmin,360px);border-color:rgba(150,130,255,.18);animation:spin 36s linear infinite reverse}
+@keyframes spin{from{transform:translate(-50%,-52%) rotate(0)}to{transform:translate(-50%,-52%) rotate(360deg)}}
+
+/* ============ UI ============ */
+.controls{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);display:flex;align-items:center;gap:16px;z-index:20;width:min(520px,80vw)}
+.counter{font:500 .72rem var(--fm);color:var(--muted);letter-spacing:.12em;display:flex;gap:.45em;align-items:baseline;font-variant-numeric:tabular-nums}
+.counter em{font-style:normal;opacity:.4}
+.counter #cur{color:var(--ink)}
+.progress{flex:1;height:2px;background:rgba(148,180,255,.14);border-radius:2px}
+.bar{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue),var(--violet),var(--teal));
+  transform:scaleX(0);transform-origin:0 50%;transition:transform .6s var(--ease);box-shadow:0 0 14px rgba(77,163,255,.7)}
+.hint{position:fixed;top:22px;right:24px;z-index:20;font:500 .64rem var(--fm);letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(233,238,251,.4);padding:.5rem .9rem;border:1px solid rgba(148,180,255,.14);border-radius:99px;background:rgba(255,255,255,.03);backdrop-filter:blur(8px)}
+.dots{position:fixed;right:22px;top:50%;translate:0 -50%;display:flex;flex-direction:column;gap:8px;z-index:20}
+.dots button{width:7px;height:7px;padding:0;border:0;border-radius:99px;background:rgba(233,238,251,.16);cursor:pointer;position:relative;
+  transition:height .4s var(--ease),background .3s,box-shadow .3s}
+.dots button:hover{background:rgba(233,238,251,.45)}
+.dots button.on{height:24px;background:linear-gradient(180deg,var(--blue),var(--violet));box-shadow:0 0 12px rgba(77,163,255,.55)}
+.dots button::after{content:attr(data-label);position:absolute;right:18px;top:50%;transform:translateY(-50%) translateX(6px);
+  font:500 .6rem var(--fm);letter-spacing:.14em;text-transform:uppercase;color:var(--ink);background:rgba(10,18,36,.92);
+  border:1px solid var(--line);padding:.4rem .7rem;border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:.25s var(--ease)}
+.dots button:hover::after{opacity:1;transform:translateY(-50%)}
+.notes-panel{position:fixed;right:24px;bottom:70px;width:min(380px,88vw);z-index:30;background:rgba(8,14,28,.9);
+  border:1px solid var(--line);border-radius:16px;padding:1rem 1.15rem 1.15rem;backdrop-filter:blur(16px);
+  transform:translateY(14px) scale(.98);opacity:0;pointer-events:none;transition:.35s var(--ease);box-shadow:0 24px 60px -20px rgba(0,0,0,.6)}
+.notes-panel.open{opacity:1;transform:none;pointer-events:auto}
+.np-head{display:flex;justify-content:space-between;align-items:center;font:600 .6rem var(--fm);letter-spacing:.22em;
+  text-transform:uppercase;color:var(--blue);margin-bottom:.6rem}
+.np-head button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.85rem;padding:.2rem}
+.np-head button:hover{color:var(--ink)}
+.notes-panel p{font-size:.85rem;line-height:1.55}
+.notes{display:none}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:1000px){
+  .arch{grid-template-columns:1fr;max-width:560px}
+  .arch .link{display:none}
+  .agent{min-height:170px;padding:1.7rem 1.2rem}
+  .timeline{display:none}
+}
+@media(max-width:820px){
+  .slide{padding:8vh 7vw 15vh}
+  .grid{grid-template-columns:1fr 1fr}
+  .compare,.challenge{grid-template-columns:1fr}
+  .dots,.hint{display:none}
+}
+@media(max-width:560px){
+  .grid{grid-template-columns:1fr}
+  .node{padding:.7rem .9rem;font-size:.88rem}
+  .halo{display:none}
+}
+@media(pointer:coarse){.glow{display:none}}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+@media print{
+  body{overflow:visible;background:var(--bg)}
+  .slide{position:relative;opacity:1!important;transform:none!important;filter:none!important;height:100vh;page-break-after:always}
+  #net,.aurora,.gridlines,.glow,.noise,.vignette,.controls,.hint,.dots,.notes-panel,.caret{display:none!important}
+}
+</style>
+</head>
+<body class="fwd">
+
+<canvas id="net"></canvas>
+<div class="aurora" aria-hidden="true"><span class="b b1"></span><span class="b b2"></span><span class="b b3"></span></div>
+<div class="gridlines" aria-hidden="true"></div>
+<div class="glow" id="cursorGlow" aria-hidden="true"></div>
+
+<div class="deck">
+
+<!-- 1 · TITLE -->
+<section class="slide center">
+  <div class="halo" aria-hidden="true"></div>
+  <div class="halo two" aria-hidden="true"></div>
+  <div class="kicker a">Microsoft Azure · AI Session</div>
+  <h1 class="a">From Prompt<br>to <span class="grad">AI&nbsp;Agent</span></h1>
+  <p class="a">How we move from asking AI questions to building systems that use <strong>knowledge</strong>, <strong>tools</strong> and <strong>actions</strong> to accomplish real goals.</p>
+  <div class="chip a"><span class="dot"></span>120-minute student workshop</div>
+  <div class="notes">Opening: Do not define an agent yet. Create curiosity first.</div>
+</section>
+
+<!-- 2 · THE HOOK -->
+<section class="slide">
+  <div class="kicker a">01 / The hook</div>
+  <h2 class="a">What if AI could do<br><span class="grad">more than answer?</span></h2>
+  <div class="prompt a">
+    <div class="bar-dots"><span></span><span></span><span></span><i>student_prompt.txt</i></div>
+    <p class="type" data-type="“I have an exam in 10 days. Help me prepare.”"><span class="typed">“I have an exam in 10 days. Help me prepare.”</span><span class="caret" aria-hidden="true"></span></p>
+  </div>
+  <p class="a">Ask the room: <strong>is this already an AI agent?</strong></p>
+  <div class="notes">Pause for answers. The point is to establish that a prompt alone does not make an agent.</div>
+</section>
+
+<!-- 3 · THOUGHT EXPERIMENT -->
+<section class="slide center">
+  <div class="kicker a">A thought experiment</div>
+  <h2 class="a">One goal. <span class="grad">Five escalating steps.</span></h2>
+  <div class="flow a">
+    <div class="node"><span class="idx">01</span>Prompt</div><div class="arrow a"><span>→</span></div>
+    <div class="node"><span class="idx">02</span>Lecture notes</div><div class="arrow a"><span>→</span></div>
+    <div class="node"><span class="idx">03</span>Search</div><div class="arrow a"><span>→</span></div>
+    <div class="node"><span class="idx">04</span>Quiz</div><div class="arrow a"><span>→</span></div>
+    <div class="node glow"><span class="idx">05</span>Study plan</div>
+  </div>
+  <p class="a">At each step, we give AI <strong>more context and capability</strong>.</p>
+  <div class="notes">Use this slide to preview the journey without giving the definition away.</div>
+</section>
+
+<!-- 4 · THE FOUNDATION -->
+<section class="slide">
+  <div class="kicker a">02 / The foundation</div>
+  <h2 class="a">Start with the <span class="grad">AI model</span></h2>
+  <div class="flow a">
+    <div class="node"><span class="idx">IN</span>Prompt</div><div class="arrow a"><span>→</span></div>
+    <div class="node glow"><span class="idx">AI</span>Model</div><div class="arrow a"><span>→</span></div>
+    <div class="node"><span class="idx">OUT</span>Response</div>
+  </div>
+  <p class="a">Generative AI is powerful at producing <strong>language</strong>, <strong>reasoning over context</strong>, <strong>transforming information</strong> and <strong>generating content</strong>.</p>
+  <div class="notes">Keep model internals brief. This session is about application architecture, not transformer mathematics.</div>
+</section>
+
+<!-- 5 · PROMPT ENGINEERING -->
+<section class="slide">
+  <div class="kicker a">03 / Prompt engineering</div>
+  <h2 class="a">A better prompt <span class="grad">changes the result</span></h2>
+  <div class="compare">
+    <div class="bad a"><div class="label"><i class="ldot warn"></i>Weak</div><strong>“Explain cloud computing.”</strong></div>
+    <div class="good a"><div class="label"><i class="ldot ok"></i>Better</div><strong>“Explain cloud computing to a first-year IT student using one analogy, three key ideas, and a short example.”</strong></div>
+  </div>
+  <div class="formula a"><span>Context</span><b>+</b><span>Task</span><b>+</b><span>Constraints</span><b>+</b><span>Output&nbsp;format</span></div>
+  <div class="notes">Live demo: send both prompts to an AI model and compare the outputs.</div>
+</section>
+
+<!-- 6 · TURNING POINT -->
+<section class="slide center">
+  <div class="kicker a">The turning point</div>
+  <p class="quote a"><span class="qmark">“</span>But what happens when the AI <span class="grad">doesn’t know</span> the information we need?<span class="qmark">”</span></p>
+  <p class="a">That is where we introduce <strong>knowledge</strong>.</p>
+  <div class="notes">Transition slide — build suspense before revealing RAG.</div>
+</section>
+
+<!-- 7 · ADD KNOWLEDGE -->
+<section class="slide">
+  <div class="kicker a">04 / Add knowledge <span class="tag">RAG</span></div>
+  <h2 class="a">Give AI access to <span class="grad">relevant information</span></h2>
+  <div class="flow a">
+    <div class="node glow"><span class="idx">AI</span>Model</div><div class="plus a"><span>+</span></div>
+    <div class="node"><span class="idx">DOCS</span>University documents</div><div class="arrow a"><span>→</span></div>
+    <div class="node"><span class="idx">OUT</span>Grounded answer</div>
+  </div>
+  <p class="a">Don’t expect the model to know everything — <strong>retrieve</strong> relevant information from trusted sources and provide it as context.</p>
+  <div class="notes">Introduce RAG conceptually here. Do not go deep into vector databases unless the audience specifically needs it.</div>
+</section>
+
+<!-- 8 · CAMPUSMATE -->
+<section class="slide">
+  <div class="kicker a">Demo moment</div>
+  <div class="titlerow a"><h2>Meet <span class="grad">CampusMate</span></h2><span class="live"><i></i>LIVE&nbsp;DEMO</span></div>
+  <p class="a">A fictional university assistant that answers questions using a small, controlled knowledge base.</p>
+  <div class="grid">
+    <div class="card a"><div class="icn"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div class="num">01</div><h3>Student Handbook</h3><p>Rules &amp; policies</p></div>
+    <div class="card a"><div class="icn"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="num">02</div><h3>Academic Calendar</h3><p>Dates &amp; deadlines</p></div>
+    <div class="card a"><div class="icn"><svg viewBox="0 0 24 24"><path d="M22 9 12 4 2 9l10 5 10-5z"/><path d="M6 11.5V16c0 1.66 2.69 3 6 3s6-1.34 6-3v-4.5"/><path d="M22 9v5"/></svg></div><div class="num">03</div><h3>Course Guide</h3><p>Course information</p></div>
+  </div>
+  <div class="notes">LIVE DEMO: Show the agent answering a question from the supplied documents.</div>
+</section>
+
+<!-- 9 · AI LESSON -->
+<section class="slide center">
+  <div class="kicker a">A useful AI lesson</div>
+  <p class="quote a"><span class="qmark">“</span>A good AI system doesn’t need to answer <span class="grad">everything</span>.<span class="qmark">”</span></p>
+  <p class="a">It should know when the available information is <strong>not enough</strong>.</p>
+  <div class="notes">Ask a question whose answer is deliberately absent from the demo documents. Discuss hallucination and grounding.</div>
+</section>
+
+<!-- 10 · GIVE IT TOOLS -->
+<section class="slide">
+  <div class="kicker a">05 / Give it tools</div>
+  <h2 class="a">Knowledge lets AI <span class="grad">know</span>.<br>Tools let AI <span class="grad">do</span>.</h2>
+  <div class="arch">
+    <div class="arch-side a"><h3>Knowledge</h3><p>Course guide</p><p>Calendar</p><p>Handbook</p></div>
+    <div class="link a" aria-hidden="true"></div>
+    <div class="agent a"><strong>AI&nbsp;Agent</strong><span>decides what information or capability is needed</span></div>
+    <div class="link rev a" aria-hidden="true"></div>
+    <div class="arch-side a"><h3>Tools</h3><p>Schedule lookup</p><p>Quiz generator</p><p>Calculator</p></div>
+  </div>
+  <div class="notes">Emphasize the shift: the model moves from answering to deciding.</div>
+</section>
+
+<!-- 11 · INGREDIENTS -->
+<section class="slide">
+  <div class="kicker a">06 / What makes an agent?</div>
+  <h2 class="a">Model <span style="color:var(--teal)">+</span> Instructions <span style="color:var(--teal)">+</span> Knowledge <span style="color:var(--teal)">+</span> Tools</h2>
+  <div class="grid">
+    <div class="card a"><div class="num">MODEL</div><h3>Generate &amp; reason</h3><p>Interprets requests and produces responses.</p></div>
+    <div class="card a"><div class="num">INSTRUCTIONS</div><h3>Set behavior</h3><p>Define role, boundaries, and response style.</p></div>
+    <div class="card a"><div class="num">KNOWLEDGE</div><h3>Ground answers</h3><p>Retrieve relevant information from sources.</p></div>
+    <div class="card a"><div class="num">TOOLS</div><h3>Take action</h3><p>Call functions, APIs, or other capabilities.</p></div>
+    <div class="card a"><div class="num">GOAL</div><h3>Accomplish a task</h3><p>Coordinate capabilities around the user’s objective.</p></div>
+    <div class="card a"><div class="num">GUARDRAILS</div><h3>Stay controlled</h3><p>Limit unsafe, irrelevant, or unsupported behavior.</p></div>
+  </div>
+  <div class="notes">Each ingredient maps to something students will click in the Azure portal next.</div>
+</section>
+
+<!-- 12 · AZURE -->
+<section class="slide">
+  <div class="kicker a">07 / Azure</div>
+  <h2 class="a">Now let’s build it with <span class="grad">Microsoft Azure</span></h2>
+  <p class="a">Microsoft Foundry provides a workspace for building and managing AI applications and agents.</p>
+  <div class="flow a">
+    <div class="node"><span class="idx">01</span>Model</div><div class="plus a"><span>+</span></div>
+    <div class="node"><span class="idx">02</span>Agent</div><div class="plus a"><span>+</span></div>
+    <div class="node"><span class="idx">03</span>Knowledge</div><div class="plus a"><span>+</span></div>
+    <div class="node glow"><span class="idx">04</span>Tools</div>
+  </div>
+  <div class="notes">Use this as the bridge into the live Azure demonstration.</div>
+</section>
+
+<!-- 13 · LIVE BUILD -->
+<section class="slide center">
+  <div class="kicker a">08 / Live build</div>
+  <h2 class="a">Let’s build <span class="grad">CampusMate</span></h2>
+  <div class="chip a"><span class="dot"></span>Live demo · ~25 minutes</div>
+  <div class="timeline">
+    <div class="step a"><div class="tdot"></div><b>Agent</b><span>Create &amp; instruct</span></div>
+    <div class="step a"><div class="tdot"></div><b>Knowledge</b><span>Connect documents</span></div>
+    <div class="step a"><div class="tdot"></div><b>Test</b><span>Ask real questions</span></div>
+    <div class="step a"><div class="tdot"></div><b>Tool</b><span>Add capability</span></div>
+  </div>
+  <div class="notes">DEMO CONTROL SLIDE. Switch to Microsoft Foundry. Keep the browser already authenticated and resources pre-created.</div>
+</section>
+
+<!-- 14 · ARCHITECTURE -->
+<section class="slide">
+  <div class="kicker a">Demo architecture</div>
+  <h2 class="a">Behind the experience</h2>
+  <div class="code a">
+    <div class="bar-dots"><span></span><span></span><span></span><i>agent_architecture.tree</i></div>
+    <pre>User request
+    ↓
+<span class="hl">AI Agent</span>
+    ├── Instructions
+    ├── <span class="gr">Retrieve relevant knowledge</span>
+    ├── <span class="gr">Call a tool when needed</span>
+    └── Use the model to formulate a response
+    ↓
+Helpful, grounded result<span class="caret" aria-hidden="true"></span></pre>
+  </div>
+  <p class="a">Keep the architecture simple enough that students can redraw it from memory.</p>
+  <div class="notes">Draw it on a whiteboard in parallel if possible.</div>
+</section>
+
+<!-- 15 · CHALLENGE -->
+<section class="slide">
+  <div class="kicker a">09 / Challenge</div>
+  <div class="titlerow a"><h2>Design your own <span class="grad">student AI agent</span></h2><span class="chip"><span class="dot"></span>10 min → 2–3 demos</span></div>
+  <div class="challenge">
+    <div class="a"><span class="n">01</span><div><strong>Agent name</strong><small>What would you call it?</small></div></div>
+    <div class="a"><span class="n">02</span><div><strong>Problem</strong><small>What student problem does it solve?</small></div></div>
+    <div class="a"><span class="n">03</span><div><strong>Knowledge</strong><small>What information does it need?</small></div></div>
+    <div class="a"><span class="n">04</span><div><strong>Tools</strong><small>What can it actually do?</small></div></div>
+    <div class="a"><span class="n">05</span><div><strong>Instructions</strong><small>How should it behave?</small></div></div>
+    <div class="a"><span class="n">06</span><div><strong>Example request</strong><small>What would a student ask?</small></div></div>
+  </div>
+  <p class="a">Students work solo or in small groups — <strong>explain the problem before the technology</strong>.</p>
+  <div class="notes">Ask presenters to explain the problem before the technology.</div>
+</section>
+
+<!-- 16 · RESPONSIBLE AI -->
+<section class="slide">
+  <div class="kicker a">10 / Responsible AI</div>
+  <h2 class="a">Capability needs <span class="grad">boundaries</span></h2>
+  <div class="grid two">
+    <div class="card a"><div class="icn"><svg viewBox="0 0 24 24"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/><path d="m9 11.5 2 2 4-4"/></svg></div><h3>Grounding</h3><p>Prefer relevant sources over invented facts.</p></div>
+    <div class="card a"><div class="icn"><svg viewBox="0 0 24 24"><circle cx="7.5" cy="16.5" r="3.5"/><path d="M10.3 13.7 20 4"/><path d="M16.5 7.5 19 10"/></svg></div><h3>Permissions</h3><p>Give tools only the access they need.</p></div>
+    <div class="card a"><div class="icn"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></div><h3>Human oversight</h3><p>Keep people involved in consequential actions.</p></div>
+    <div class="card a"><div class="icn"><svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div><h3>Privacy</h3><p>Don’t casually feed sensitive personal data into demos.</p></div>
+  </div>
+  <div class="notes">Keep this practical. Connect each principle to the agent students just designed.</div>
+</section>
+
+<!-- 17 · THE JOURNEY -->
+<section class="slide center">
+  <div class="kicker a">The journey</div>
+  <div class="flow a">
+    <div class="node"><span class="idx">01</span>Prompt</div><div class="arrow a"><span>→</span></div>
+    <div class="node"><span class="idx">02</span>Better prompt</div><div class="arrow a"><span>→</span></div>
+    <div class="node"><span class="idx">03</span>Knowledge</div><div class="arrow a"><span>→</span></div>
+    <div class="node"><span class="idx">04</span>Tools</div><div class="arrow a"><span>→</span></div>
+    <div class="node glow"><span class="idx">05</span>Agent</div>
+  </div>
+  <p class="big a">From asking AI questions<br>to <span class="grad">building with AI</span>.</p>
+  <div class="notes">Recap the full arc before the final call to action.</div>
+</section>
+
+<!-- 18 · CLOSING -->
+<section class="slide center">
+  <div class="kicker a">Take it further</div>
+  <h2 class="a">Don’t just use AI.<br><span class="grad">Build with it.</span></h2>
+  <p class="final a">Explore Microsoft Learn, experiment with Azure AI, and turn one real problem into a small AI application.</p>
+  <div class="pillrow a"><span class="chip">Microsoft Learn</span><span class="chip">Azure</span><span class="chip">Microsoft Foundry</span></div>
+  <div class="notes">Close with the learning path. Invite students to continue with a small problem rather than attempting a huge product.</div>
+</section>
+
+</div>
+
+<!-- UI -->
+<div class="hint">← → navigate · F fullscreen · N notes</div>
+<nav class="dots" id="dots" aria-label="Slide navigation"></nav>
+<div class="controls">
+  <div class="counter"><span id="cur">01</span><em>/</em><span id="tot">18</span></div>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+</div>
+<aside class="notes-panel" id="np">
+  <div class="np-head"><span>Speaker notes</span><button id="npX" aria-label="Close notes">✕</button></div>
+  <p id="npBody"></p>
+</aside>
+<div class="noise" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+
+<script>
+/* ============ CORE NAVIGATION ============ */
+const slides=[...document.querySelectorAll('.slide')];
+const cur=document.getElementById('cur'),tot=document.getElementById('tot'),bar=document.getElementById('bar');
+const np=document.getElementById('np'),npBody=document.getElementById('npBody');
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let i=0;
+
+/* stagger indexes for entrance animations */
+slides.forEach(s=>[...s.querySelectorAll('.a')].forEach((el,k)=>el.style.setProperty('--d',k)));
+
+/* dot navigation with tooltips */
+const dotsWrap=document.getElementById('dots');
+const dots=slides.map((s,k)=>{
+  const b=document.createElement('button');
+  b.dataset.label=(s.querySelector('.kicker')?.textContent.trim().split('\n')[0])||('Slide '+(k+1));
+  b.setAttribute('aria-label','Go to slide '+(k+1));
+  b.addEventListener('click',()=>show(k));
+  dotsWrap.appendChild(b);return b;
+});
+
+function show(n,force){
+  n=Math.max(0,Math.min(slides.length-1,n));
+  if(!force&&n===i)return;
+  document.body.classList.remove('fwd','back');
+  document.body.classList.add(n>=i?'fwd':'back');
+  const old=slides[i];
+  if(old&&old!==slides[n]){
+    old.classList.remove('active');old.classList.add('leaving');
+    clearTimeout(old._t);old._t=setTimeout(()=>old.classList.remove('leaving'),800);
+  }
+  slides[n].classList.add('active');
+  i=n;
+  cur.textContent=String(i+1).padStart(2,'0');
+  bar.style.transform=`scaleX(${(i+1)/slides.length})`;
+  dots.forEach((d,k)=>d.classList.toggle('on',k===i));
+  syncNotes();typeSlide(slides[n]);
+}
+function next(){show(i+1)}function prev(){show(i-1)}
+function syncNotes(){const nt=slides[i].querySelector('.notes');npBody.textContent=nt?nt.textContent.trim():'No notes for this slide.'}
+
+/* ============ TYPING EFFECT ============ */
+function typeSlide(s){
+  const el=s.querySelector('.type');if(!el)return;
+  const out=el.querySelector('.typed'),txt=el.dataset.type||'';
+  if(el._t)clearInterval(el._t);
+  if(RM){out.textContent=txt;return}
+  out.textContent='';let j=0;
+  el._t=setInterval(()=>{out.textContent=txt.slice(0,++j);if(j>=txt.length)clearInterval(el._t)},26);
+}
+
+/* ============ INPUT ============ */
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev()}
+  else if(e.key==='Home')show(0);
+  else if(e.key==='End')show(slides.length-1);
+  else if(e.key.toLowerCase()==='f'){
+    document.fullscreenElement?document.exitFullscreen?.():document.documentElement.requestFullscreen?.();
+  }
+  else if(e.key.toLowerCase()==='n')np.classList.toggle('open');
+  else if(e.key==='Escape')np.classList.remove('open');
+});
+document.getElementById('npX').addEventListener('click',()=>np.classList.remove('open'));
+let tx=0;
+document.addEventListener('touchstart',e=>tx=e.changedTouches[0].screenX,{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].screenX-tx;
+  if(Math.abs(dx)>60)(dx<0?next:prev)();
+},{passive:true});
+
+/* ============ CARD SPOTLIGHT ============ */
+document.querySelectorAll('.card,.challenge>div,.compare>div').forEach(c=>{
+  c.addEventListener('pointermove',e=>{
+    const r=c.getBoundingClientRect();
+    c.style.setProperty('--mx',(e.clientX-r.left)+'px');
+    c.style.setProperty('--my',(e.clientY-r.top)+'px');
+  });
+});
+
+/* ============ NEURAL PARTICLE NETWORK + CURSOR GLOW ============ */
+const cv=document.getElementById('net'),cx=cv.getContext('2d');
+const glowEl=document.getElementById('cursorGlow');
+let W=0,H=0,pts=[];const M={x:-1e4,y:-1e4};
+let gx=innerWidth/2,gy=innerHeight/2,gtx=gx,gty=gy;
+const LINK=130;
+
+function sizeNet(){
+  const d=Math.min(devicePixelRatio||1,2);
+  W=innerWidth;H=innerHeight;
+  cv.width=W*d;cv.height=H*d;cv.style.width=W+'px';cv.style.height=H+'px';
+  cx.setTransform(d,0,0,d,0,0);
+  const n=Math.min(110,Math.round(W*H/15000));
+  pts=Array.from({length:n},()=>({
+    x:Math.random()*W,y:Math.random()*H,
+    vx:(Math.random()-.5)*.32,vy:(Math.random()-.5)*.32,
+    r:Math.random()*1.4+.7,
+    c:Math.random()<.55?'110,165,255':'150,130,255'
+  }));
+}
+addEventListener('resize',sizeNet);sizeNet();
+
+addEventListener('pointermove',e=>{M.x=e.clientX;M.y=e.clientY;gtx=e.clientX;gty=e.clientY});
+
+function drawNet(){
+  cx.clearRect(0,0,W,H);
+  for(const p of pts){
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<-20)p.x=W+20;else if(p.x>W+20)p.x=-20;
+    if(p.y<-20)p.y=H+20;else if(p.y>H+20)p.y=-20;
+    const dx=p.x-M.x,dy=p.y-M.y,d2=dx*dx+dy*dy;
+    if(d2<14400){const d=Math.sqrt(d2)||1;p.x+=dx/d*.6;p.y+=dy/d*.6}
+  }
+  for(let a=0;a<pts.length;a++){
+    const p=pts[a];
+    for(let b=a+1;b<pts.length;b++){
+      const q=pts[b],dx=p.x-q.x,dy=p.y-q.y;
+      if(dx>LINK||dx<-LINK||dy>LINK||dy<-LINK)continue;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<LINK){
+        cx.strokeStyle=`rgba(105,155,255,${(1-d/LINK)*.26})`;
+        cx.lineWidth=1;cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(q.x,q.y);cx.stroke();
+      }
+    }
+    const md=Math.sqrt((p.x-M.x)**2+(p.y-M.y)**2);
+    if(md<170){
+      cx.strokeStyle=`rgba(80,220,200,${(1-md/170)*.45})`;
+      cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(M.x,M.y);cx.stroke();
+    }
+    cx.fillStyle=`rgba(${p.c},.85)`;
+    cx.beginPath();cx.arc(p.x,p.y,p.r,0,7);cx.fill();
+  }
+}
+function loop(){
+  drawNet();
+  gx+=(gtx-gx)*.07;gy+=(gty-gy)*.07;
+  glowEl.style.transform=`translate(${gx}px,${gy}px)`;
+  requestAnimationFrame(loop);
+}
+if(RM){drawNet();glowEl.style.display='none'}else loop();
+
+/* go */
+tot.textContent=String(slides.length).padStart(2,'0');
+show(0,true);
+</script>
+</body>
+</html>

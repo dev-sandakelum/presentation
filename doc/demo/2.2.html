@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Next.js Unlocked — Microsoft Learn Student Ambassadors</title>
+<meta name="description" content="Next.js Unlocked — From React library to full-stack framework. A Microsoft Learn Student Ambassadors session, Part 1 of 3: Concepts.">
+<style>
+/* ============================================================
+   Microsoft Learn Student Ambassadors theme
+   Blue/white, Segoe UI, Fluent-style motion
+   ============================================================ */
+:root{
+  --font-sans:'Segoe UI Variable Display','Segoe UI',-apple-system,BlinkMacSystemFont,system-ui,'Helvetica Neue',sans-serif;
+  --font-mono:'Cascadia Code','Cascadia Mono',Consolas,'SF Mono',ui-monospace,monospace;
+  --ms-red:#F25022; --ms-green:#7FBA00; --ms-blue:#00A4EF; --ms-yellow:#FFB900;
+}
+html[data-theme="light"]{
+  --bg:#F7F9FC; --surface:#FFFFFF; --code-bg:#F8FAFD;
+  --fg:#201F1E; --muted:#5B5A58; --faint:#A19F9D;
+  --border:#E3E8EF; --border-strong:#C8D3E0;
+  --blue:#0078D4; --blue-deep:#005A9E; --blue-2:#38BDF8;
+  --blue-soft:rgba(0,120,212,.10); --blue-faint:rgba(0,120,212,.06);
+  --chip-bd:rgba(0,120,212,.28); --chip-fg:#005A9E;
+  --ok:#107C10; --err:#D13438;
+  --react:#149ACC; --grid:rgba(0,120,212,.09); --glow:rgba(0,120,212,.10);
+  --shadow:0 2px 10px rgba(16,42,77,.07);
+  --toast-bg:#292827; --toast-fg:#FFFFFF;
+}
+html[data-theme="dark"]{
+  --bg:#1B1A19; --surface:#252423; --code-bg:#1E1E1E;
+  --fg:#F3F2F1; --muted:#B8B6B3; --faint:#8A8886;
+  --border:#3A3836; --border-strong:#55524E;
+  --blue:#4CC2FF; --blue-deep:#99E0FF; --blue-2:#99E0FF;
+  --blue-soft:rgba(76,194,255,.14); --blue-faint:rgba(76,194,255,.08);
+  --chip-bd:rgba(76,194,255,.35); --chip-fg:#9AD6F9;
+  --ok:#89D180; --err:#F1707B;
+  --react:#61DAFB; --grid:rgba(76,194,255,.08); --glow:rgba(76,194,255,.09);
+  --shadow:0 2px 10px rgba(0,0,0,.35);
+  --toast-bg:#3B3A39; --toast-fg:#FFFFFF;
+}
+
+/* Projector-friendly type scale (capped by vw AND vh) */
+:root{
+  --fs-display: min(7.2rem, 11vw, 15vh);
+  --fs-h2:      min(3.6rem, 5vw, 7.6vh);
+  --fs-lead:    min(1.5rem, 1.85vw, 3vh);
+  --fs-h4:      min(1.45rem, 1.6vw, 2.6vh);
+  --fs-body:    min(1.35rem, 1.45vw, 2.35vh);
+  --fs-body-s:  min(1.25rem, 1.35vw, 2.2vh);
+  --fs-code:    min(1.25rem, 1.35vw, 2.2vh);
+  --fs-label:   min(.8rem, .88vw, 1.4vh);
+}
+
+/* ============ Base ============ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--fg);font-family:var(--font-sans);
+  -webkit-font-smoothing:antialiased;overflow:hidden;
+}
+::selection{background:var(--blue);color:#fff}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:6px}
+
+body,.chrome,.grid-bg,.code,.step,.row-ic,.chip,.icon-btn,.progress-bar,.ov,.pc,.vs-wrap,.boundary,.mark,.b-item,.pn,.ov-n,.ag,.avatar,.url-chip{
+  transition:background-color .35s ease,color .35s ease,border-color .35s ease;
+}
+
+/* Icons */
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.ic-fill{fill:currentColor;stroke:none}
+
+/* Microsoft logo (four squares — always colored) */
+.ms-logo{display:block}
+.ms-logo .sq{transform-box:fill-box;transform-origin:center;animation:sqWave 5s ease-in-out infinite}
+.ms-logo .sq:nth-child(2){animation-delay:.15s}
+.ms-logo .sq:nth-child(3){animation-delay:.3s}
+.ms-logo .sq:nth-child(4){animation-delay:.45s}
+@keyframes sqWave{0%,100%{transform:scale(1)}4%{transform:scale(1.18)}9%{transform:scale(1)}}
+
+/* ============ Backdrop ============ */
+.grid-bg{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:radial-gradient(var(--grid) 1.3px,transparent 1.3px);
+  background-size:26px 26px;
+  animation:gridDrift 70s linear infinite;
+}
+@keyframes gridDrift{to{background-position:26px 26px}}
+.mark{position:fixed;width:15px;height:15px;z-index:35;pointer-events:none;color:var(--blue);opacity:.4}
+.mark::before,.mark::after{content:"";position:absolute;background:currentColor}
+.mark::before{left:7px;top:0;width:1px;height:100%}
+.mark::after{top:7px;left:0;width:100%;height:1px}
+.m-tl{top:70px;left:12px}.m-tr{top:70px;right:12px}
+.m-bl{bottom:70px;left:12px}.m-br{bottom:70px;right:12px}
+.mark{animation:markSpin 48s linear infinite}
+@keyframes markSpin{to{transform:rotate(360deg)}}
+
+/* ============ Chrome ============ */
+.chrome{
+  position:fixed;left:0;right:0;height:56px;z-index:40;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(16px,2.5vw,32px);
+  background:color-mix(in srgb,var(--surface) 88%,transparent);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.chrome.top{top:0;border-bottom:1px solid var(--border)}
+.chrome.bottom{bottom:0;border-top:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand .ms-logo{width:23px;height:23px}
+.brand-name{font-size:16.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.brand-sep{width:1px;height:19px;background:var(--border-strong);margin:0 4px 0 6px}
+.brand-sub{font:500 var(--fs-label) var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.chrome-actions{display:flex;gap:9px}
+.icon-btn{
+  width:40px;height:40px;display:grid;place-items:center;
+  background:transparent;border:1px solid var(--border-strong);border-radius:8px;
+  color:var(--fg);cursor:pointer;
+  transition:background .18s,color .18s,border-color .18s,transform .12s;
+}
+.icon-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.icon-btn:active{transform:scale(.93)}
+.icon-btn .ic{width:18px;height:18px}
+html[data-theme="light"] #btnTheme .ic-moon{display:none}
+html[data-theme="dark"] #btnTheme .ic-sun{display:none}
+.foot-title{
+  font:500 var(--fs-label) var(--font-mono);letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34vw;
+}
+.foot-mid{display:flex;align-items:center;gap:12px;position:absolute;left:50%;transform:translateX(-50%)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+.clock{font:500 var(--fs-label) var(--font-mono);letter-spacing:.1em;color:var(--muted);font-variant-numeric:tabular-nums}
+.clock .colon{animation:blink 1s steps(1) infinite}
+.foot-right{display:flex;align-items:center;gap:12px}
+.counter{font:500 var(--fs-label) var(--font-mono);letter-spacing:.14em;color:var(--fg);font-variant-numeric:tabular-nums}
+.progress{position:fixed;left:0;bottom:0;height:3px;width:100%;z-index:45;pointer-events:none}
+.progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--blue-2));transition:width .5s cubic-bezier(.22,1,.36,1);animation:softBreathe 5s ease-in-out infinite}
+@keyframes softBreathe{50%{opacity:.6}}
+@keyframes blink{50%{opacity:0}}
+
+/* ============ Deck & slides ============ */
+#deck{position:fixed;inset:0;z-index:1}
+.slide{
+  position:absolute;inset:0;display:none;flex-direction:column;
+  padding:clamp(76px,8.5vh,100px) clamp(24px,5.5vw,84px) clamp(74px,8.5vh,94px);
+  overflow-y:auto;overflow-x:hidden;
+}
+.slide.active{display:flex}
+.s-head{flex:none}
+.s-body{flex:1;margin-top:clamp(20px,3.4vh,40px);min-height:0}
+
+.rv{animation:rv-in .8s cubic-bezier(.16,1,.3,1) both;animation-delay:var(--d,0s)}
+@keyframes rv-in{from{opacity:0;transform:translateY(26px)}}
+.mask{display:block;overflow:hidden;padding-bottom:.12em}
+.mask>span{display:block;transform:translateY(112%);animation:m-in .9s cubic-bezier(.16,1,.3,1) var(--d,.12s) both}
+@keyframes m-in{to{transform:translateY(0)}}
+
+/* Typography */
+.kick{
+  display:flex;align-items:center;gap:12px;
+  font:600 min(.82rem,.92vw,1.45vh) var(--font-sans);letter-spacing:.2em;text-transform:uppercase;
+  color:var(--blue);margin-bottom:clamp(14px,2.4vh,24px);
+}
+.kick::before{content:"";width:9px;height:9px;border-radius:2px;background:var(--blue);flex:none;animation:pulse 3.5s ease-in-out infinite}
+.h2{font-size:var(--fs-h2);font-weight:700;letter-spacing:-.03em;line-height:1.05}
+.h2bar{width:64px;height:4px;border-radius:2px;margin-top:16px;background:linear-gradient(90deg,var(--blue),var(--blue-2))}
+.lead{margin-top:clamp(12px,2vh,20px);font-size:var(--fs-lead);line-height:1.5;color:var(--muted);max-width:56ch}
+
+/* Gradient accent text */
+.grad{
+  background:linear-gradient(120deg,var(--blue) 20%,var(--blue-2) 85%);
+  background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:gradShift 9s ease-in-out infinite alternate;
+}
+@keyframes gradShift{to{background-position:100% 0}}
+
+/* ============ Components ============ */
+.split{display:grid;grid-template-columns:1.08fr 1fr;gap:clamp(30px,4.5vw,64px);align-items:start}
+.stack-note{display:flex;flex-wrap:wrap;gap:12px;margin-top:clamp(20px,3vh,30px)}
+.chip{
+  display:inline-flex;align-items:center;gap:9px;
+  font:500 var(--fs-label) var(--font-mono);letter-spacing:.12em;text-transform:uppercase;
+  padding:10px 16px;border:1px solid var(--chip-bd);border-radius:999px;
+  color:var(--chip-fg);background:var(--blue-faint);
+}
+.chip .ic{width:13px;height:13px}
+.chip-ghost{border-style:dashed;color:var(--muted);background:transparent;border-color:var(--border-strong)}
+a.chip{text-decoration:none;transition:border-color .18s,background .18s,transform .15s}
+a.chip:hover{border-color:var(--blue);background:var(--blue-soft);transform:translateY(-1px)}
+.trust{margin-top:clamp(24px,4vh,36px);border-top:1px solid var(--border);padding-top:clamp(14px,2.2vh,20px)}
+.trust-k{display:block;font:600 var(--fs-label) var(--font-sans);letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+.trust-n{font-size:var(--fs-h4);font-weight:600;letter-spacing:.02em}
+
+.rows{display:flex;flex-direction:column;gap:12px}
+.row{
+  display:grid;grid-template-columns:56px 1fr;gap:clamp(16px,1.8vw,26px);
+  padding:clamp(14px,2.2vh,20px) clamp(16px,1.6vw,22px);
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  box-shadow:var(--shadow);align-items:flex-start;
+  transition:border-color .25s,transform .25s;
+}
+.row:hover{border-color:var(--chip-bd)}
+.row-ic{width:52px;height:52px;border-radius:11px;display:grid;place-items:center;background:var(--blue-soft)}
+.row-ic .ic{width:23px;height:23px;color:var(--blue)}
+.row h4{font-size:var(--fs-h4);font-weight:600;letter-spacing:-.01em;margin-bottom:5px}
+.row p{font-size:var(--fs-body-s);line-height:1.45;color:var(--muted)}
+
+/* ============ Agenda ============ */
+.agenda{display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,2vh,20px) clamp(20px,3vw,40px)}
+.ag{
+  display:grid;grid-template-columns:48px 1fr;gap:16px;align-items:flex-start;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:clamp(14px,2.2vh,18px) clamp(16px,1.6vw,20px);box-shadow:var(--shadow);
+  transition:border-color .25s;
+}
+.ag:hover{border-color:var(--chip-bd)}
+.ag-n{
+  width:44px;height:44px;border-radius:10px;background:var(--blue);color:#fff;
+  display:grid;place-items:center;font:600 min(1.05rem,1.15vw,1.9vh) var(--font-mono);
+  animation:pnWave 9s ease-in-out infinite;
+}
+.ag h4{font-size:var(--fs-h4);font-weight:600;margin-bottom:4px}
+.ag p{font-size:var(--fs-body-s);line-height:1.4;color:var(--muted)}
+
+/* ============ Presenter ============ */
+.pres{display:grid;grid-template-columns:auto 1fr;gap:clamp(28px,4.5vw,64px);align-items:center}
+.avatar{
+  width:clamp(180px,20vw,260px);aspect-ratio:1;
+  border:2px solid var(--chip-bd);border-radius:18px;
+  background:var(--blue-faint);display:grid;place-items:center;
+  overflow:hidden;position:relative;
+}
+.avatar::after{
+  content:"";position:absolute;inset:14px;border:1px dashed var(--chip-bd);
+  border-radius:13px;pointer-events:none;animation:dashBreathe 8s ease-in-out infinite;
+}
+@keyframes dashBreathe{50%{border-color:var(--blue)}}
+.avatar::before{
+  content:"";position:absolute;left:15px;right:15px;top:15px;height:2px;
+  background:var(--blue);opacity:0;z-index:2;pointer-events:none;border-radius:2px;
+  animation:scanLineInset 6s linear infinite;
+}
+@keyframes scanLineInset{
+  0%{top:15px;opacity:0}
+  4%{opacity:.45}
+  42%{top:calc(100% - 16px);opacity:.45}
+  46%,100%{top:calc(100% - 16px);opacity:0}
+}
+.avatar-initials{font:600 clamp(3.4rem,6.2vw,5.6rem) var(--font-mono);letter-spacing:-.05em;color:var(--blue)}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block;position:relative;z-index:1}
+.pres-name{font-size:min(4.1rem,5.8vw,8.4vh);font-weight:700;letter-spacing:-.04em;line-height:1}
+.pres-role{margin-top:clamp(10px,1.8vh,16px);font-size:var(--fs-lead);line-height:1.4;color:var(--muted)}
+.pres-role b{color:var(--blue);font-weight:600}
+.pres-rows{margin-top:clamp(16px,2.8vh,26px)}
+.pres-contact{display:flex;flex-wrap:wrap;gap:12px;margin-top:clamp(18px,3vh,28px)}
+.pres-hello{
+  display:flex;align-items:center;gap:12px;margin-top:clamp(16px,2.6vh,24px);
+  font:400 var(--fs-body-s) var(--font-mono);color:var(--muted);
+}
+.pres-hello .ic{width:19px;height:19px;flex:none;color:var(--blue);animation:pulse 3s ease-in-out infinite}
+
+/* React atom */
+.react-side{display:flex;flex-direction:column;align-items:center;gap:clamp(18px,3vh,26px);padding-top:6px}
+.react-logo{width:clamp(170px,19vw,235px);height:auto;color:var(--react);animation:atomBob 7s ease-in-out infinite alternate}
+@keyframes atomBob{from{transform:translateY(-8px)}to{transform:translateY(8px)}}
+.react-logo ellipse{fill:none;stroke:currentColor;stroke-width:6}
+.react-logo .core{fill:currentColor;stroke:none;transform-box:fill-box;transform-origin:center;animation:corePulse 3.2s ease-in-out infinite}
+@keyframes corePulse{50%{transform:scale(1.35)}}
+.react-spin{transform-box:fill-box;transform-origin:center;animation:spin 30s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.react-cap{text-align:center}
+.cap-t{display:block;font-size:var(--fs-h4);font-weight:600;margin-bottom:7px}
+.cap-s{font:400 var(--fs-label) var(--font-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+
+/* Quote slide */
+.quote{
+  font-size:min(2rem,2.9vw,4.2vh);font-weight:600;letter-spacing:-.02em;line-height:1.4;
+  border-left:4px solid var(--blue);padding-left:clamp(20px,2.5vw,32px);max-width:54ch;
+}
+.defs{margin-top:clamp(20px,4vh,40px);display:grid;gap:12px}
+.def{
+  display:grid;grid-template-columns:56px minmax(200px,340px) 1fr;gap:clamp(16px,1.8vw,26px);align-items:center;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:clamp(14px,2.2vh,18px) clamp(16px,1.6vw,20px);box-shadow:var(--shadow);
+}
+.def-ic{width:52px;height:52px;border-radius:11px;display:grid;place-items:center;background:var(--blue-soft)}
+.def-ic .ic{width:23px;height:23px;color:var(--blue)}
+.def h4{font-size:var(--fs-h4);font-weight:600}
+.def p{font-size:var(--fs-body-s);line-height:1.45;color:var(--muted)}
+.foot-note{display:flex;gap:14px;align-items:flex-start;margin-top:clamp(18px,3vh,28px);font:400 var(--fs-body-s) var(--font-mono);color:var(--muted)}
+.foot-note .ic{width:18px;height:18px;margin-top:.35em;color:var(--blue);animation:nudgeR 4s ease-in-out infinite}
+@keyframes nudgeR{0%,100%{transform:translateX(0)}45%{transform:translateX(5px)}55%{transform:translateX(0)}}
+
+/* Flow diagrams */
+.flow{display:flex;align-items:stretch}
+.step{flex:1;border:2px dashed var(--border-strong);border-radius:12px;padding:clamp(16px,2.6vh,24px);position:relative;background:var(--surface)}
+.step .n{position:absolute;top:14px;right:16px;font:500 var(--fs-label) var(--font-mono);color:var(--faint)}
+.step>.ic{width:26px;height:26px;margin-bottom:14px;color:var(--blue)}
+.step h4{font-size:var(--fs-h4);font-weight:600;margin-bottom:6px}
+.step p{font-size:var(--fs-body-s);line-height:1.4;color:var(--muted)}
+.flow-sep{flex:none;width:clamp(30px,3vw,44px);display:grid;place-items:center;color:var(--faint)}
+.flow-sep .ic{width:19px;height:19px}
+.flow.solid .step{border-style:solid;border-color:var(--blue);background:var(--blue);color:#fff}
+.flow.solid .step p{color:rgba(255,255,255,.85)}
+.flow.solid .step .n{color:rgba(255,255,255,.7)}
+.flow.solid .step>.ic{color:#fff}
+.flow.solid .flow-sep{color:var(--blue)}
+
+/* Pros / cons */
+.pc{margin-top:clamp(18px,3.4vh,34px);display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface)}
+.pc>div{padding:clamp(14px,2.2vh,20px) clamp(16px,2vw,24px);display:flex;gap:14px;align-items:flex-start}
+.pc .pros{border-right:1px solid var(--border)}
+.pc .pros .ic{color:var(--ok)}
+.pc .cons .ic{color:var(--err)}
+.pc .ic{width:19px;height:19px;margin-top:.3em;animation:iconBeat 5s ease-in-out infinite}
+@keyframes iconBeat{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+.pc .tag{display:block;font:600 var(--fs-label) var(--font-sans);letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px}
+.pc p{font-size:var(--fs-body-s);line-height:1.45;color:var(--muted)}
+
+/* Comparison table */
+.vs-wrap{border:1px solid var(--border);border-radius:14px;overflow:hidden;max-width:1100px;background:var(--surface);box-shadow:var(--shadow)}
+.vs{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;min-width:760px}
+.vs th,.vs td{border-bottom:1px solid var(--border);padding:clamp(12px,2vh,18px) clamp(16px,2vw,24px);text-align:left;vertical-align:top}
+.vs tr:last-child td{border-bottom:0}
+.vs thead th{border-bottom:1px solid var(--border-strong);font:600 min(.88rem,.98vw,1.55vh) var(--font-sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.vs th.corner{width:17%}
+.vs td:first-child{font:600 var(--fs-label) var(--font-sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding-top:.7em}
+.vs td{font-size:var(--fs-body);line-height:1.4}
+.vs .nx{background:var(--blue-faint);border-left:1px solid var(--chip-bd)}
+.vs thead th.nx{position:relative;background:var(--blue);color:#fff}
+.vs thead th.nx::after{
+  content:"";position:absolute;left:0;bottom:0;height:3px;width:0;
+  background:#fff;animation:underlineSweep 5s ease-in-out infinite;
+}
+@keyframes underlineSweep{0%{width:0}12%{width:100%}55%{width:100%;opacity:1}60%,100%{width:100%;opacity:0}}
+.cl{display:flex;gap:12px;align-items:flex-start}
+.cl .ic{width:19px;height:19px;margin-top:.22em;flex:none;animation:iconBeat 5s ease-in-out infinite}
+.cl-x .ic{color:var(--faint)}
+.vs .cl-x{color:var(--muted)}
+.cl-ok .ic{color:var(--ok)}
+
+/* Feature rows */
+.feats{display:grid;gap:12px}
+.feat{
+  display:grid;grid-template-columns:56px minmax(230px,360px) 1fr;gap:clamp(16px,2vw,28px);align-items:center;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:clamp(13px,2.1vh,17px) clamp(16px,1.6vw,20px);box-shadow:var(--shadow);
+}
+.feat .fn{
+  width:48px;height:48px;border-radius:10px;display:grid;place-items:center;
+  background:var(--blue-soft);color:var(--blue);
+  font:600 min(1.05rem,1.15vw,1.9vh) var(--font-mono);
+  animation:numWave 12s ease-in-out infinite;
+}
+@keyframes numWave{0%,100%{background:var(--blue-soft);color:var(--blue)}4%{background:var(--blue);color:#fff}8%{background:var(--blue-soft);color:var(--blue)}}
+.feat h4{font-size:var(--fs-h4);font-weight:600}
+.feat p{font-size:var(--fs-body-s);line-height:1.45;color:var(--muted)}
+
+/* Code panels (VS Code palettes per theme) */
+.code{border:1px solid var(--border);border-radius:12px;background:var(--code-bg);overflow:hidden}
+.code-hi{border-color:var(--blue);animation:hiBreathe 6s ease-in-out infinite}
+@keyframes hiBreathe{50%{border-color:var(--border-strong)}}
+.code-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);font:500 var(--fs-label) var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fg)}
+.code-tag{color:var(--faint)}
+.code pre{position:relative;padding:clamp(14px,2.2vh,20px) clamp(16px,2vw,22px);overflow-x:auto;font:400 var(--fs-code) var(--font-mono);line-height:1.65;color:var(--muted)}
+.code pre::after{
+  content:"";position:absolute;left:0;right:0;top:0;height:1px;
+  background:var(--blue);opacity:0;pointer-events:none;
+  animation:scanLine 7s linear infinite;
+}
+@keyframes scanLine{
+  0%{top:0;opacity:0}
+  3%{opacity:.35}
+  40%{top:calc(100% - 1px);opacity:.35}
+  43%,100%{top:calc(100% - 1px);opacity:0}
+}
+html[data-theme="light"] .code .tk-k{color:#0000FF}
+html[data-theme="light"] .code .tk-str{color:#A31515}
+html[data-theme="light"] .code .d{color:#795E26}
+html[data-theme="light"] .code .f{color:#001080}
+html[data-theme="light"] .code .cm{color:#008000}
+html[data-theme="light"] .code .tk-tag{color:#800000}
+html[data-theme="dark"] .code .tk-k{color:#569CD6}
+html[data-theme="dark"] .code .tk-str{color:#CE9178}
+html[data-theme="dark"] .code .d{color:#DCDCAA}
+html[data-theme="dark"] .code .f{color:#9CDCFE}
+html[data-theme="dark"] .code .cm{color:#6A9955}
+html[data-theme="dark"] .code .tk-tag{color:#4EC9B0}
+
+/* Routing variants */
+.routs{display:grid;gap:12px}
+.rout{
+  display:grid;grid-template-columns:minmax(0,1.12fr) 1fr auto;gap:clamp(16px,2.4vw,30px);align-items:center;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:clamp(15px,2.4vh,20px) clamp(16px,1.8vw,24px);box-shadow:var(--shadow);
+}
+.rout-pat{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.pat{font:500 min(1.45rem,1.55vw,2.5vh) var(--font-mono);color:var(--fg);word-break:break-all}
+.pat-tag{font:500 var(--fs-label) var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--chip-fg);background:var(--blue-faint);border:1px solid var(--chip-bd);padding:6px 12px;border-radius:999px}
+.rout h4{font-size:var(--fs-h4);font-weight:600;margin-bottom:5px}
+.rout p{font-size:var(--fs-body-s);line-height:1.45;color:var(--muted)}
+.url-chip{font:500 min(1.2rem,1.3vw,2.1vh) var(--font-mono);padding:10px 15px;border:1px solid var(--chip-bd);border-radius:9px;background:var(--blue-faint);color:var(--chip-fg);white-space:nowrap;animation:chipBreathe 7s ease-in-out infinite}
+@keyframes chipBreathe{50%{opacity:.72}}
+
+/* Server / client boundary */
+.boundary{display:grid;grid-template-columns:1.6fr 1fr;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}
+.b-zone{padding:clamp(16px,2.6vh,24px) clamp(18px,2.4vw,28px)}
+.b-server{background:var(--blue-faint)}
+.b-client{position:relative}
+.b-client::before{
+  content:"";position:absolute;left:-1px;top:0;bottom:0;width:2px;
+  background-image:repeating-linear-gradient(to bottom,var(--blue) 0 10px,transparent 10px 20px);
+  background-size:100% 20px;animation:march 2.5s linear infinite;
+}
+@keyframes march{to{background-position:0 20px}}
+.b-zone h5{font:600 var(--fs-label) var(--font-sans);letter-spacing:.2em;text-transform:uppercase;margin-bottom:15px;color:var(--muted)}
+.b-server h5{color:var(--blue)}
+.b-list{display:flex;flex-wrap:wrap;gap:10px}
+.b-item{font:400 min(1.2rem,1.3vw,2.1vh) var(--font-mono);padding:9px 15px;border:1px solid var(--border);border-radius:9px;background:var(--bg);animation:chipBreathe 8s ease-in-out infinite}
+.b-inv{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+
+/* Data fetching */
+.df-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(22px,3vw,34px);align-items:start}
+.df-cap{display:flex;gap:12px;align-items:flex-start;margin-top:15px;font:400 min(1.2rem,1.3vw,2.1vh) var(--font-mono);color:var(--muted)}
+.df-cap .ic{width:17px;height:17px;margin-top:.32em;flex:none}
+.df-cap .ok-ic{color:var(--ok)}
+.df-cap .x-ic{color:var(--faint)}
+
+/* Terminal (always dark — VS Code style) */
+.term{border:1px solid #3C3C3C;border-radius:12px;background:#1E1E1E;overflow:hidden;max-width:880px;color:#D4D4D4;box-shadow:var(--shadow)}
+.term-bar{display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid #3C3C3C}
+.term-dots{display:flex;gap:7px}
+.term-dots i{width:13px;height:13px;border-radius:50%;border:1px solid #5A5A5A;animation:chipBreathe 3s ease-in-out infinite}
+.term-dots i:nth-child(2){animation-delay:.5s}
+.term-dots i:nth-child(3){animation-delay:1s}
+.term-title{font:500 var(--fs-label) var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:#9DA0A3;margin-left:auto}
+.term-body{padding:clamp(14px,2.4vh,22px) clamp(16px,2.2vw,24px);font:400 var(--fs-code) var(--font-mono);line-height:1.9}
+.tl{white-space:pre-wrap;word-break:break-word}
+.tl.out{opacity:0;transform:translateY(4px);transition:opacity .3s,transform .3s}
+.tl.out.show{opacity:1;transform:none}
+.prompt{color:#4EC9B0}
+.cmd{color:#E8E8E8;font-weight:600}
+.tl .a{color:#569CD6;font-weight:600}
+.tl .dim{color:#6E7681}
+.tl .g{color:#6A9955}
+.tl .ic{display:inline-block;vertical-align:-2px;width:14px;height:14px}
+.caret{display:inline-block;width:.55ch;height:1.05em;background:#D4D4D4;vertical-align:-.12em;margin-left:2px;animation:blink 1.1s steps(1) infinite}
+.copy-btn{
+  display:inline-flex;align-items:center;gap:16px;margin-top:clamp(18px,3vh,26px);
+  padding:14px 22px;border:1px solid var(--chip-bd);border-radius:10px;
+  background:var(--blue-faint);color:var(--fg);cursor:pointer;text-align:left;
+  transition:border-color .18s,background .18s,transform .12s;
+}
+.copy-btn:hover{border-color:var(--blue);background:var(--blue-soft)}
+.copy-btn:active{transform:scale(.98)}
+.copy-btn .ic{width:19px;height:19px;color:var(--blue)}
+.copy-btn .c-cmd{font:500 min(1.45rem,1.55vw,2.5vh) var(--font-mono)}
+.copy-btn .c-hint{font:500 var(--fs-label) var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+
+/* Demo timeline */
+.phases{display:grid;grid-template-columns:repeat(5,1fr);gap:clamp(18px,2.6vw,28px)}
+.phase{
+  display:flex;flex-direction:column;align-items:flex-start;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:clamp(16px,2.6vh,24px);box-shadow:var(--shadow);
+}
+.pn{
+  width:clamp(46px,5.2vh,56px);height:clamp(46px,5.2vh,56px);display:grid;place-items:center;
+  border-radius:11px;background:var(--blue);color:#fff;
+  font:600 min(1.15rem,1.25vw,2vh) var(--font-mono);
+  animation:pnWave 9s ease-in-out infinite;
+}
+@keyframes pnWave{
+  0%,100%{transform:scale(1);background:var(--blue)}
+  3%{transform:scale(1.1);background:var(--blue-2)}
+  6%{transform:scale(1);background:var(--blue)}
+}
+.phase h4{margin-top:clamp(13px,2vh,17px);font-size:var(--fs-h4);font-weight:600}
+.phase p{margin-top:8px;font-size:var(--fs-body-s);line-height:1.45;color:var(--muted)}
+.phase .chip{margin-top:clamp(12px,1.8vh,16px)}
+.phase code{font:500 min(1.1rem,1.2vw,1.95vh) var(--font-mono);background:var(--blue-faint);color:var(--chip-fg);padding:3px 8px;border-radius:6px}
+
+/* Title slide */
+.s-title,.s-end{align-items:center;justify-content:center;text-align:center}
+.s-title::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(720px 480px at 50% 32%,var(--glow),transparent 70%);
+  animation:glowBreathe 9s ease-in-out infinite;
+}
+@keyframes glowBreathe{50%{opacity:.55}}
+.title-wrap,.end-wrap{display:flex;flex-direction:column;align-items:center;max-width:min(94vw,1200px)}
+.title-logo{width:clamp(44px,5.5vw,60px);height:auto;margin-bottom:clamp(20px,3.4vh,34px)}
+.title-org{font-size:min(1.15rem,1.4vw,2.1vh);font-weight:600;letter-spacing:.06em;color:var(--muted);margin-bottom:clamp(20px,3.4vh,32px)}
+.title-badges{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:clamp(18px,3.4vh,32px)}
+.title{font-size:var(--fs-display);font-weight:700;letter-spacing:-.045em;line-height:.98}
+.title-sub{margin-top:clamp(14px,2.4vh,24px);font-size:min(1.65rem,2.3vw,3.3vh);color:var(--muted)}
+.msa-tagline{display:flex;gap:clamp(20px,3.4vw,40px);flex-wrap:wrap;justify-content:center;margin-top:clamp(22px,4.4vh,42px)}
+.msa-tagline span{display:flex;align-items:center;gap:9px;font:600 min(.95rem,1.05vw,1.7vh) var(--font-sans);letter-spacing:.08em;text-transform:uppercase;color:var(--fg)}
+.msa-tagline i{width:11px;height:11px;border-radius:2px;display:block;animation:sqWave 5s ease-in-out infinite}
+.msa-tagline span:nth-child(2) i{animation-delay:.15s}
+.msa-tagline span:nth-child(3) i{animation-delay:.3s}
+.msa-tagline span:nth-child(4) i{animation-delay:.45s}
+.title-hint{display:flex;gap:clamp(16px,3vw,34px);flex-wrap:wrap;justify-content:center;margin-top:clamp(24px,5.6vh,54px);font:400 min(.85rem,.95vw,1.5vh) var(--font-mono);color:var(--faint)}
+.title-hint span{display:flex;align-items:center;gap:9px}
+kbd{font:500 min(.75rem,.8vw,1.3vh) var(--font-mono);border:1px solid var(--border-strong);border-bottom-width:2px;border-radius:6px;padding:4px 8px;color:var(--fg);background:var(--surface)}
+
+/* End slide */
+.end-logo{width:clamp(40px,4.8vw,56px);height:auto;margin-bottom:clamp(20px,3.2vh,32px)}
+.s-end .kick{justify-content:center}
+.end-title{font-size:var(--fs-display);font-weight:700;letter-spacing:-.045em;line-height:.98}
+.end-sub{margin-top:clamp(14px,2.4vh,24px);font-size:min(1.65rem,2.2vw,3.2vh);color:var(--muted)}
+.end-actions{margin-top:clamp(24px,5vh,44px)}
+.btn{
+  display:inline-flex;align-items:center;gap:13px;padding:16px 28px;
+  border:1px solid var(--blue);background:var(--blue);color:#fff;
+  font:600 min(.88rem,.98vw,1.55vh) var(--font-sans);letter-spacing:.08em;text-transform:uppercase;
+  border-radius:8px;cursor:pointer;transition:opacity .18s,transform .15s,background .18s;
+}
+.btn:hover{background:var(--blue-2);border-color:var(--blue-2)}
+.btn:active{transform:scale(.97)}
+.btn .ic{width:17px;height:17px}
+#restart .ic{animation:nudgeL 3.5s ease-in-out infinite}
+@keyframes nudgeL{0%,100%{transform:translateX(0)}45%{transform:translateX(-4px)}55%{transform:translateX(0)}}
+.end-credit{margin-top:clamp(26px,5.4vh,50px);font:400 min(.7rem,.78vw,1.25vh) var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--faint);max-width:76ch;line-height:1.8}
+
+/* Overview */
+.ov{
+  position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;
+  padding:clamp(64px,9vh,84px) clamp(24px,7vw,110px) clamp(64px,9vh,84px);overflow-y:auto;
+  background:color-mix(in srgb,var(--bg) 93%,transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+.ov[hidden]{display:none}
+.ov-head{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:clamp(16px,2.6vh,26px);flex:none}
+.ov-title{font-size:min(2rem,3vw,4vh);font-weight:700;letter-spacing:-.03em}
+.ov-hint{font:400 var(--fs-label) var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 clamp(28px,4vw,64px)}
+.ov-item{
+  display:grid;grid-template-columns:56px 1fr auto;gap:16px;align-items:center;
+  padding:13px 10px;border:none;border-top:1px solid var(--border);
+  background:none;color:var(--fg);text-align:left;cursor:pointer;width:100%;
+}
+.ov-item:hover{background:var(--blue-faint)}
+.ov-n{width:42px;height:42px;border:1px solid var(--border-strong);border-radius:9px;display:grid;place-items:center;font:500 min(.85rem,.95vw,1.5vh) var(--font-mono);color:var(--muted)}
+.ov-item.cur .ov-n{background:var(--blue);color:#fff;border-color:var(--blue);animation:curPulse 2.2s ease-in-out infinite}
+@keyframes curPulse{50%{transform:scale(1.08)}}
+.ov-t{font-size:min(1.15rem,1.3vw,2.1vh);font-weight:600}
+.ov-k{font:400 var(--fs-label) var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:80px;left:50%;transform:translate(-50%,12px);
+  background:var(--toast-bg);color:var(--toast-fg);
+  font:500 min(.85rem,.95vw,1.5vh) var(--font-sans);letter-spacing:.04em;
+  padding:13px 22px;border-radius:8px;opacity:0;pointer-events:none;
+  transition:opacity .25s,transform .25s;z-index:80;max-width:88vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* Flow idle signal */
+.flow>*{animation:flowPass 8s linear infinite}
+@keyframes flowPass{0%,100%{opacity:1}2.5%{opacity:.45}5%{opacity:1}}
+.flow.solid .step{animation-name:flowLift}
+@keyframes flowLift{0%,100%{transform:translateY(0)}2.5%{transform:translateY(-6px)}5%{transform:translateY(0)}}
+.chip{animation:chipBreathe 7s ease-in-out infinite}
+
+/* ============ Responsive ============ */
+@media (max-width:980px){
+  .split{grid-template-columns:1fr}
+  .react-side{order:2;flex-direction:row;justify-content:flex-start;gap:26px}
+  .react-logo{width:130px}
+  .pres{grid-template-columns:1fr;justify-items:center;text-align:center;gap:26px}
+  .avatar{width:180px}
+  .pres-contact{justify-content:center}
+  .agenda{grid-template-columns:1fr}
+  .flow{flex-direction:column}
+  .flow-sep{width:auto;height:28px}
+  .flow-sep .ic{transform:rotate(90deg)}
+  .feat{grid-template-columns:64px 1fr}
+  .feat p{grid-column:2}
+  .rout{grid-template-columns:1fr;gap:12px}
+  .df-grid{grid-template-columns:1fr}
+  .phases{grid-template-columns:1fr}
+  .phase{display:grid;grid-template-columns:52px 1fr;column-gap:18px;align-items:start}
+  .pn{width:48px;height:48px}
+  .phase h4{margin-top:2px}
+  .phase p,.phase .chip{grid-column:2}
+  .phase .chip{margin-top:12px;align-self:flex-start}
+  .ov-grid{grid-template-columns:1fr}
+}
+@media (max-width:720px){
+  .brand-sub,.brand-sep,.foot-title,.foot-mid{display:none}
+  .vs-wrap{overflow-x:auto}
+  .pc{grid-template-columns:1fr}
+  .pc .pros{border-right:0;border-bottom:1px solid var(--border)}
+  :root{--fs-h2:min(2.2rem,8vw,7vh);--fs-body:min(1.15rem,3.4vw,2.4vh);--fs-body-s:min(1.05rem,3.1vw,2.2vh);--fs-h4:min(1.2rem,3.6vw,2.6vh);--fs-lead:min(1.1rem,3.4vw,2.8vh);--fs-code:min(1rem,2.9vw,2.1vh)}
+  .pres-name{font-size:min(2.6rem,9vw,6.5vh)}
+  .msa-tagline{gap:14px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001s!important;
+    animation-delay:0s!important;
+    animation-iteration-count:1!important;
+  }
+}
+
+/* ---- fixes & additions ---- */
+.phases{grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr))}
+.fx-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:clamp(14px,2vw,24px);align-items:start}
+.fx-t{padding:9px 16px;border-bottom:1px solid var(--border);font:600 var(--fs-label) var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.fx-p{margin:0;padding:clamp(12px,2vh,18px) 16px;font:var(--fs-code)/1.55 var(--font-mono);color:var(--fg);overflow-x:auto;white-space:pre;tab-size:2}
+.code{max-width:100%;min-width:0}
+.s-body>*{max-width:100%}
+.vs-wrap{overflow-x:auto}
+@media (max-width:980px){.phases{grid-template-columns:1fr}}
+.fx-terms .term{max-width:none;min-width:0}
+.fx-p .tk-k,.fx-p .tk-str,.fx-p .d,.fx-p .cm,.fx-p .tk-tag{font:inherit}
+
+/* ---- Template background: no bars, full image visible ---- */
+:root{--sh:min(100vh,56.25vw);--bgpad:calc((100vh - var(--sh))/2)}
+html[data-theme="light"]{--bg:#FCFDFF}
+.grid-bg{background:url(data:image/webp;base64,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) center/contain no-repeat;animation:none;opacity:1;z-index:0}
+html[data-theme="dark"] .grid-bg{filter:invert(1) hue-rotate(180deg) brightness(.75)}
+.mark,.brand,.foot-title,.foot-mid{display:none!important}
+.chrome{background:none!important;border:0!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;height:0;padding:0}
+.chrome-actions,.foot-right{position:fixed;right:clamp(8px,1.2vw,18px);z-index:50;display:flex;flex-direction:column;align-items:center;gap:8px;transition:opacity .4s}
+.chrome-actions{top:30%}
+.foot-right{top:56%}
+.icon-btn{background:color-mix(in srgb,var(--surface) 85%,transparent);backdrop-filter:blur(6px)}
+body.idle .chrome-actions,body.idle .foot-right{opacity:0}
+.slide{padding-top:calc(var(--bgpad) + var(--sh)*.125);padding-bottom:calc(var(--bgpad) + var(--sh)*.115);padding-left:clamp(24px,7vw,110px);padding-right:clamp(64px,8vw,120px)}
+@media (max-width:980px){
+  .grid-bg{background-size:cover}
+  .slide{padding-top:12vh;padding-bottom:11vh;padding-left:20px;padding-right:56px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ Icon sprite ============ -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-tri" viewBox="0 0 24 24"><path d="M12 3 22 20H2Z"/></symbol>
+  <symbol id="i-arrow-r" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 12.5A8.5 8.5 0 0 1 11.5 4a7 7 0 1 0 8.5 8.5Z"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></symbol>
+  <symbol id="i-max" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5a14.5 14.5 0 0 1 0 19 14.5 14.5 0 0 1 0-19Z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Zm0 0v6h6"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 19h16"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 2v3m6-3v3M9 19v3m6-3v3M2 9h3m-3 6h3M19 9h3m-3 6h3"/></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="3.5" width="18" height="7" rx="1.5"/><rect x="3" y="13.5" width="18" height="7" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2.5" y="3.5" width="19" height="13" rx="2"/><path d="M8 21h8m-4-4.5V21"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3a7 7 0 0 1 7 7c0 2-1 3.8-2.9 5.4-1.6 1.3-3.2 3.6-4.1 5.6-.9-2-2.5-4.3-4.1-5.6C6 13.8 5 12 5 10a7 7 0 0 1 7-7Z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.5-4.5"/></symbol>
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="8.5" ry="3"/><path d="M3.5 5.5v13c0 1.7 3.8 3 8.5 3s8.5-1.3 8.5-3v-13M3.5 12c0 1.7 3.8 3 8.5 3s8.5-1.3 8.5-3"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2.5 9.5 5L12 12.5l-9.5-5 9.5-5Z"/><path d="m2.5 12.5 9.5 5 9.5-5M2.5 17l9.5 5 9.5-5"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.5 6.5a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-8 7.9l-6.9 7a2.1 2.1 0 0 1-3-3l7-6.9a6 6 0 0 1 7.9-8l-3.8 3.8Z"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="m15.5 18 6-6-6-6m-7 0-6 6 6 6"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 7V2m6 5V2M7.5 7h9v5a4.5 4.5 0 0 1-9 0V7ZM12 16.5V22"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8.2a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4a2 2 0 0 0-1 1.7v7.6a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 6.5A1.5 1.5 0 0 1 5 5h4l2 2.5h8a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 18.5H5A1.5 1.5 0 0 1 3.5 17V6.5Z"/></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><path d="m4 17 6-5-6-5M12 19h8"/></symbol>
+  <symbol id="i-pointer" viewBox="0 0 24 24"><path d="m3 3 7.1 17 2.5-7.4L20 10.1 3 3Z"/></symbol>
+  <symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5L16 9.5"/></symbol>
+  <symbol id="i-layout" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 10a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+  <symbol id="i-at" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-grad" viewBox="0 0 24 24"><path d="m2.5 9 9.5-4.5L21.5 9 12 13.5 2.5 9Z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5M21.5 9v5"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+</svg>
+
+<!-- Reusable Microsoft logo -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="ms-logo" viewBox="0 0 23 23">
+    <rect class="sq" x="1" y="1" width="10" height="10" rx="1.2" fill="#F25022"/>
+    <rect class="sq" x="12" y="1" width="10" height="10" rx="1.2" fill="#7FBA00"/>
+    <rect class="sq" x="1" y="12" width="10" height="10" rx="1.2" fill="#00A4EF"/>
+    <rect class="sq" x="12" y="12" width="10" height="10" rx="1.2" fill="#FFB900"/>
+  </symbol>
+</svg>
+
+<div class="grid-bg" aria-hidden="true"></div>
+<span class="mark m-tl" aria-hidden="true"></span><span class="mark m-tr" aria-hidden="true"></span>
+<span class="mark m-bl" aria-hidden="true"></span><span class="mark m-br" aria-hidden="true"></span>
+
+<!-- ============ Chrome ============ -->
+<header class="chrome top">
+  <div class="brand">
+    <svg class="ms-logo"><use href="#ms-logo"/></svg>
+    <span class="brand-name">Microsoft Learn Student Ambassadors</span>
+    <span class="brand-sep"></span>
+    <span class="brand-sub">Next.js · Part 1 / 3</span>
+  </div>
+  <div class="chrome-actions">
+    <button class="icon-btn" id="btnTheme" title="Toggle theme (T)" aria-label="Toggle theme">
+      <svg class="ic ic-sun"><use href="#i-sun"/></svg>
+      <svg class="ic ic-moon"><use href="#i-moon"/></svg>
+    </button>
+    <button class="icon-btn" id="btnOverview" title="Overview (O)" aria-label="Slide overview"><svg class="ic"><use href="#i-grid"/></svg></button>
+    <button class="icon-btn" id="btnFull" title="Fullscreen (F)" aria-label="Fullscreen"><svg class="ic"><use href="#i-max"/></svg></button>
+  </div>
+</header>
+
+<!-- ============ Deck ============ -->
+<main id="deck">
+
+  <!-- 01 · Title -->
+  <section class="slide s-title active" data-title="Next.js Unlocked" data-kick="Opening">
+    <div class="title-wrap">
+      <svg class="ms-logo title-logo rv" style="--d:.05s"><use href="#ms-logo"/></svg>
+      <p class="title-org rv" style="--d:.12s">Microsoft Learn Student Ambassadors</p>
+      <div class="title-badges rv" style="--d:.2s">
+        <span class="chip">Part 1 of 3 — Concepts</span>
+        <span class="chip chip-ghost">Next.js</span>
+      </div>
+      <h1 class="title rv" style="--d:.28s">Next.js <span class="grad">Unlocked</span></h1>
+      <p class="title-sub rv" style="--d:.45s">From React library to full-stack framework.</p>
+      <div class="msa-tagline rv" style="--d:.6s">
+        <span><i style="background:#F25022"></i>Learn</span>
+        <span><i style="background:#7FBA00"></i>Build</span>
+        <span><i style="background:#00A4EF"></i>Create</span>
+        <span><i style="background:#FFB900"></i>Make an Impact</span>
+      </div>
+      <div class="title-hint rv" style="--d:.75s">
+        <span><kbd>←</kbd><kbd>→</kbd> navigate</span>
+        <span><kbd>T</kbd> theme</span>
+        <span><kbd>F</kbd> fullscreen</span>
+        <span><kbd>O</kbd> overview</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 · Presenter -->
+  <section class="slide" data-title="Your Presenter" data-kick="Your Host">
+    <header class="s-head">
+      <p class="kick rv">Your Host</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Nice to meet you.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+    </header>
+    <div class="s-body pres">
+      <!--
+        ✏️ EDIT — AVATAR:
+        Replace the <span class="avatar-initials">YN</span> below with your own initials,
+        OR swap it for a real photo:
+        <img src="your-photo.jpg" alt="Photo of Your Name">
+      -->
+      <div class="avatar rv" style="--d:.22s">
+        <span class="avatar-initials">YN</span>
+      </div>
+      <div class="pres-right">
+        <!-- ✏️ EDIT — YOUR NAME -->
+        <h3 class="pres-name mask" style="--d:.2s"><span>Your Name</span></h3>
+        <!-- ✏️ EDIT — YOUR ROLE / TITLE (keep it one line) -->
+        <p class="pres-role rv" style="--d:.34s">Microsoft Learn Student Ambassador · <b>Web &amp; Cloud enthusiast</b></p>
+
+        <div class="rows pres-rows">
+          <!-- ✏️ EDIT — FACT ROW 1: what you study / where -->
+          <div class="row rv" style="--d:.44s">
+            <span class="row-ic"><svg class="ic"><use href="#i-grad"/></svg></span>
+            <div><h4>Studying Computer Science</h4><p>Your University, Year 3 — focused on web engineering and developer communities.</p></div>
+          </div>
+          <!-- ✏️ EDIT — FACT ROW 2: your experience with the topic -->
+          <div class="row rv" style="--d:.54s">
+            <span class="row-ic"><svg class="ic"><use href="#i-code"/></svg></span>
+            <div><h4>Building with React &amp; Next.js</h4><p>Side projects, hackathon wins, and shipping full-stack apps to real users.</p></div>
+          </div>
+          <!-- ✏️ EDIT — FACT ROW 3: location / community (delete this row if not needed) -->
+          <div class="row rv" style="--d:.64s">
+            <span class="row-ic"><svg class="ic"><use href="#i-pin"/></svg></span>
+            <div><h4>Based in Your City</h4><p>Hosting workshops like this one — and always up for a chat about the web.</p></div>
+          </div>
+        </div>
+
+        <!-- ✏️ EDIT — CONTACT: update href links + labels -->
+        <div class="pres-contact rv" style="--d:.78s">
+          <a class="chip" href="https://github.com/yourhandle" target="_blank" rel="noopener"><svg class="ic"><use href="#i-at"/></svg> github.com/yourhandle</a>
+          <a class="chip" href="https://linkedin.com/in/yourhandle" target="_blank" rel="noopener"><svg class="ic"><use href="#i-link"/></svg> linkedin.com/in/yourhandle</a>
+          <a class="chip" href="mailto:your@email.dev"><svg class="ic"><use href="#i-mail"/></svg> your@email.dev</a>
+        </div>
+
+        <p class="pres-hello rv" style="--d:.9s"><svg class="ic"><use href="#i-terminal"/></svg> $ echo "Ask me anything — before, during, or after the talk."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 · Agenda -->
+  <section class="slide" data-title="Agenda" data-kick="Today">
+    <header class="s-head">
+      <p class="kick rv">What We'll Cover</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Today's agenda.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+    </header>
+    <div class="s-body">
+      <div class="agenda">
+        <div class="ag rv" style="--d:.2s"><span class="ag-n">01</span><div><h4>The Baseline</h4><p>React refresher — library, view layer, tooling gaps.</p></div></div>
+        <div class="ag rv" style="--d:.28s"><span class="ag-n">02</span><div><h4>Library vs. Framework</h4><p>Who calls whose code — and why it matters.</p></div></div>
+        <div class="ag rv" style="--d:.36s"><span class="ag-n">03</span><div><h4>Rendering</h4><p>CSR and SSR, step by step — the blank screen problem.</p></div></div>
+        <div class="ag rv" style="--d:.44s"><span class="ag-n">04</span><div><h4>React vs. Next.js</h4><p>Head-to-head — routing, SEO, backend, setup.</p></div></div>
+        <div class="ag rv" style="--d:.52s"><span class="ag-n">05</span><div><h4>Next.js 13+</h4><p>App Router, Server Components, Actions, streaming.</p></div></div>
+        <div class="ag rv" style="--d:.6s"><span class="ag-n">06</span><div><h4>Deep Dives</h4><p>Routing patterns, Server Components, data fetching.</p></div></div>
+        <div class="ag rv" style="--d:.68s"><span class="ag-n">07</span><div><h4>Getting Started</h4><p>One CLI command — project anatomy.</p></div></div>
+        <div class="ag rv" style="--d:.76s"><span class="ag-n">08</span><div><h4>Live Demo</h4><p>Five phases — from dev server to full-stack.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 · What is Next.js -->
+  <section class="slide" data-title="What is Next.js?" data-kick="Foundation">
+    <header class="s-head">
+      <p class="kick rv">Foundation — 01</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>The React framework<br>for the web.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+    </header>
+    <div class="s-body split">
+      <div class="split-l">
+        <p class="lead rv" style="--d:.28s">A full-stack React framework, built and maintained by Vercel — everything you need ships in the box. And every bit of your existing React knowledge still applies.</p>
+        <div class="stack-note rv" style="--d:.42s">
+          <span class="chip"><svg class="ic ic-fill"><use href="#i-tri"/></svg> Built on React</span>
+          <span class="chip chip-ghost">Maintained by Vercel</span>
+        </div>
+        <div class="trust rv" style="--d:.55s">
+          <span class="trust-k">Powering production at</span>
+          <span class="trust-n">Netflix · TikTok · Twitch</span>
+        </div>
+      </div>
+      <div class="split-r rows">
+        <div class="row rv" style="--d:.3s">
+          <span class="row-ic"><svg class="ic"><use href="#i-circle-check"/></svg></span>
+          <div><h4>Production-Ready</h4><p>Battle-tested at scale — the default choice for shipping React to the real world.</p></div>
+        </div>
+        <div class="row rv" style="--d:.42s">
+          <span class="row-ic"><svg class="ic"><use href="#i-layers"/></svg></span>
+          <div><h4>Full-Stack</h4><p>Routing, rendering, and API routes — front-end and back-end living in one project.</p></div>
+        </div>
+        <div class="row rv" style="--d:.54s">
+          <span class="row-ic"><svg class="ic"><use href="#i-wrench"/></svg></span>
+          <div><h4>Opinionated</h4><p>Sensible conventions decided for you — less time configuring, more time building.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 · React baseline -->
+  <section class="slide" data-title="Did you know about React?" data-kick="React">
+    <header class="s-head">
+      <p class="kick rv">The Baseline</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Did you know about React?</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">React is a UI library — not a full framework. It's powerful, but intentionally minimal.</p>
+    </header>
+    <div class="s-body split">
+      <div class="split-l react-side rv" style="--d:.22s">
+        <svg class="react-logo" viewBox="0 0 220 220" aria-hidden="true">
+          <g class="react-spin">
+            <ellipse cx="110" cy="110" rx="92" ry="34"/>
+            <ellipse cx="110" cy="110" rx="92" ry="34" transform="rotate(60 110 110)"/>
+            <ellipse cx="110" cy="110" rx="92" ry="34" transform="rotate(120 110 110)"/>
+          </g>
+          <circle class="core" cx="110" cy="110" r="9"/>
+        </svg>
+        <div class="react-cap">
+          <span class="cap-t">React</span>
+          <span class="cap-s">A library for the View layer</span>
+        </div>
+      </div>
+      <div class="split-r rows">
+        <div class="row rv" style="--d:.28s">
+          <span class="row-ic"><svg class="ic"><use href="#i-code"/></svg></span>
+          <div><h4>Component-Based</h4><p>Build UIs from small, reusable, declarative pieces.</p></div>
+        </div>
+        <div class="row rv" style="--d:.38s">
+          <span class="row-ic"><svg class="ic"><use href="#i-swap"/></svg></span>
+          <div><h4>No Built-in Routing</h4><p>You pick and install your own router — React Router, TanStack, and friends.</p></div>
+        </div>
+        <div class="row rv" style="--d:.48s">
+          <span class="row-ic"><svg class="ic"><use href="#i-search"/></svg></span>
+          <div><h4>SEO Challenges</h4><p>Client-side rendering makes search indexing harder.</p></div>
+        </div>
+        <div class="row rv" style="--d:.58s">
+          <span class="row-ic"><svg class="ic"><use href="#i-plug"/></svg></span>
+          <div><h4>External Tools Required</h4><p>Routing and data fetching must be wired up by you.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 · Library vs Framework -->
+  <section class="slide" data-title="Library vs. Framework" data-kick="Concepts">
+    <header class="s-head">
+      <p class="kick rv">The Key Insight</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Library vs. Framework</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+    </header>
+    <div class="s-body">
+      <blockquote class="quote mask" style="--d:.22s">
+        <span>“With a library, you're the architect. With a framework, the structure is already designed — you fill in the details.”</span>
+      </blockquote>
+      <div class="defs">
+        <div class="def rv" style="--d:.38s">
+          <span class="def-ic"><svg class="ic"><use href="#i-box"/></svg></span>
+          <h4>The Foundation</h4>
+          <p>Provides a predefined structure for your application.</p>
+        </div>
+        <div class="def rv" style="--d:.48s">
+          <span class="def-ic"><svg class="ic"><use href="#i-wrench"/></svg></span>
+          <h4>Built-in Tools</h4>
+          <p>Routing and bundling are included, out of the box.</p>
+        </div>
+        <div class="def rv" style="--d:.58s">
+          <span class="def-ic"><svg class="ic"><use href="#i-repeat"/></svg></span>
+          <h4>Inversion of Control</h4>
+          <p>The framework calls your code — not the other way around.</p>
+        </div>
+      </div>
+      <p class="foot-note rv" style="--d:.72s"><svg class="ic"><use href="#i-arrow-r"/></svg>Next.js adds conventions on top of React — so your team spends less time on setup and more time on shipping.</p>
+    </div>
+  </section>
+
+  <!-- 07 · CSR -->
+  <section class="slide" data-title="How React Works — CSR" data-kick="Rendering">
+    <header class="s-head">
+      <p class="kick rv">Rendering — 01</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>How React works — CSR</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">Client-Side Rendering — the server sends a bare shell, and React builds the whole UI in the browser.</p>
+    </header>
+    <div class="s-body">
+      <div class="flow rv" style="--d:.25s">
+        <div class="step">
+          <span class="n">01</span>
+          <svg class="ic"><use href="#i-globe"/></svg>
+          <h4>Request</h4><p>The browser asks the server for the page.</p>
+        </div>
+        <div class="flow-sep"><svg class="ic"><use href="#i-arrow-r"/></svg></div>
+        <div class="step">
+          <span class="n">02</span>
+          <svg class="ic"><use href="#i-file"/></svg>
+          <h4>Empty HTML</h4><p>The server responds with a bare shell.</p>
+        </div>
+        <div class="flow-sep"><svg class="ic"><use href="#i-arrow-r"/></svg></div>
+        <div class="step">
+          <span class="n">03</span>
+          <svg class="ic"><use href="#i-download"/></svg>
+          <h4>JS Download</h4><p>The browser fetches the React bundle.</p>
+        </div>
+        <div class="flow-sep"><svg class="ic"><use href="#i-arrow-r"/></svg></div>
+        <div class="step">
+          <span class="n">04</span>
+          <svg class="ic"><use href="#i-cpu"/></svg>
+          <h4>Render</h4><p>React builds the UI on the client.</p>
+        </div>
+      </div>
+      <div class="pc rv" style="--d:.5s">
+        <div class="pros"><svg class="ic"><use href="#i-check"/></svg><div><span class="tag">Pros</span><p>Rich, dynamic interactivity once the app has loaded.</p></div></div>
+        <div class="cons"><svg class="ic"><use href="#i-x"/></svg><div><span class="tag">Cons</span><p>Slow first load · weak SEO · JavaScript required.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08 · SSR -->
+  <section class="slide" data-title="What is SSR?" data-kick="Rendering">
+    <header class="s-head">
+      <p class="kick rv">Rendering — 02</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>What is SSR?</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">Server-Side Rendering — HTML is generated on the server, per request. The browser receives fully populated HTML, immediately.</p>
+    </header>
+    <div class="s-body">
+      <div class="flow solid rv" style="--d:.25s">
+        <div class="step">
+          <span class="n">01</span>
+          <svg class="ic"><use href="#i-globe"/></svg>
+          <h4>Request</h4><p>The browser asks the server for the page.</p>
+        </div>
+        <div class="flow-sep"><svg class="ic"><use href="#i-arrow-r"/></svg></div>
+        <div class="step">
+          <span class="n">02</span>
+          <svg class="ic"><use href="#i-server"/></svg>
+          <h4>Server Renders</h4><p>HTML is generated on the server, per request.</p>
+        </div>
+        <div class="flow-sep"><svg class="ic"><use href="#i-arrow-r"/></svg></div>
+        <div class="step">
+          <span class="n">03</span>
+          <svg class="ic"><use href="#i-monitor"/></svg>
+          <h4>Immediate Paint</h4><p>Content is visible right away — no blank screen.</p>
+        </div>
+        <div class="flow-sep"><svg class="ic"><use href="#i-arrow-r"/></svg></div>
+        <div class="step">
+          <span class="n">04</span>
+          <svg class="ic"><use href="#i-drop"/></svg>
+          <h4>Hydration</h4><p>React attaches interactivity to the HTML.</p>
+        </div>
+      </div>
+      <div class="pc rv" style="--d:.5s">
+        <div class="pros"><svg class="ic"><use href="#i-check"/></svg><div><span class="tag">Pros</span><p>Fast first paint · better SEO · accessible content.</p></div></div>
+        <div class="cons"><svg class="ic"><use href="#i-x"/></svg><div><span class="tag">Cons</span><p>More server load · interactions wait for hydration.</p></div></div>
+      </div>
+      <p class="foot-note rv" style="--d:.62s"><svg class="ic"><use href="#i-arrow-r"/></svg>Net result: better SEO and initial-load performance.</p>
+    </div>
+  </section>
+
+  <!-- 09 · React vs Next.js -->
+  <section class="slide" data-title="React vs. Next.js" data-kick="Comparison">
+    <header class="s-head">
+      <p class="kick rv">Head to Head</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>React vs. Next.js</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+    </header>
+    <div class="s-body">
+      <div class="vs-wrap rv" style="--d:.25s">
+        <table class="vs">
+          <thead>
+            <tr>
+              <th class="corner"></th>
+              <th>React — CSR</th>
+              <th class="nx">Next.js — SSR / Full-Stack</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Routing</td>
+              <td><span class="cl cl-x"><svg class="ic"><use href="#i-x"/></svg>Manual — install a library</span></td>
+              <td class="nx"><span class="cl cl-ok"><svg class="ic"><use href="#i-check"/></svg>File-based, built-in</span></td>
+            </tr>
+            <tr>
+              <td>Rendering</td>
+              <td><span class="cl cl-x"><svg class="ic"><use href="#i-x"/></svg>CSR only</span></td>
+              <td class="nx"><span class="cl cl-ok"><svg class="ic"><use href="#i-check"/></svg>CSR · SSR · SSG · ISR</span></td>
+            </tr>
+            <tr>
+              <td>Backend</td>
+              <td><span class="cl cl-x"><svg class="ic"><use href="#i-x"/></svg>None — external API needed</span></td>
+              <td class="nx"><span class="cl cl-ok"><svg class="ic"><use href="#i-check"/></svg>Built-in API routes</span></td>
+            </tr>
+            <tr>
+              <td>SEO</td>
+              <td><span class="cl cl-x"><svg class="ic"><use href="#i-x"/></svg>Poor by default</span></td>
+              <td class="nx"><span class="cl cl-ok"><svg class="ic"><use href="#i-check"/></svg>Excellent out of the box</span></td>
+            </tr>
+            <tr>
+              <td>Setup</td>
+              <td><span class="cl cl-x"><svg class="ic"><use href="#i-x"/></svg>Many tools to configure</span></td>
+              <td class="nx"><span class="cl cl-ok"><svg class="ic"><use href="#i-check"/></svg>Zero config to start</span></td>
+            </tr>
+            <tr>
+              <td>First Load</td>
+              <td><span class="cl cl-x"><svg class="ic"><use href="#i-x"/></svg>Blank screen first</span></td>
+              <td class="nx"><span class="cl cl-ok"><svg class="ic"><use href="#i-check"/></svg>Instant page view</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · New features -->
+  <section class="slide" data-title="New Features in Next.js 13+" data-kick="Features">
+    <header class="s-head">
+      <p class="kick rv">What's New — 13+</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>A new generation of features.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">Next.js 13+ brought faster, smarter defaults for building modern applications.</p>
+    </header>
+    <div class="s-body">
+      <div class="feats">
+        <div class="feat rv" style="--d:.22s"><span class="fn">01</span><h4>App Router</h4><p>A new routing system built on React conventions — intuitive and nested by design.</p></div>
+        <div class="feat rv" style="--d:.32s"><span class="fn">02</span><h4>Server Components</h4><p>Components render on the server, by default.</p></div>
+        <div class="feat rv" style="--d:.42s"><span class="fn">03</span><h4>Server Actions</h4><p>Run server-side code directly from your components.</p></div>
+        <div class="feat rv" style="--d:.52s"><span class="fn">04</span><h4>Streaming &amp; Suspense</h4><p>Progressive page loading with instant fallback UI.</p></div>
+        <div class="feat rv" style="--d:.62s"><span class="fn">05</span><h4>Built-in Optimizations</h4><p>Automatic image, font, and script optimization — no extra tooling.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 · App Router -->
+  <section class="slide" data-title="Deep Dive: The App Router" data-kick="App Router">
+    <header class="s-head">
+      <p class="kick rv">Deep Dive — 01</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>The App Router</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">Replaces the old /pages directory with a powerful, nested structure — everything lives in <em>app</em>.</p>
+    </header>
+    <div class="s-body split">
+      <div class="split-l rv" style="--d:.25s">
+        <div class="code">
+          <div class="code-bar"><span>file tree</span><span class="code-tag">app/</span></div>
+          <pre><span class="d">app/</span>
+├── <span class="f">page.tsx</span>            <span class="cm"># /</span>
+└── <span class="d">dashboard/</span>
+    └── <span class="f">page.tsx</span>        <span class="cm"># /dashboard</span></pre>
+        </div>
+      </div>
+      <div class="split-r rows">
+        <div class="row rv" style="--d:.32s">
+          <span class="row-ic"><svg class="ic"><use href="#i-folder"/></svg></span>
+          <div><h4>Routes = Folders</h4><p>Every folder under <em>app</em> maps to a URL segment — no manual route configuration.</p></div>
+        </div>
+        <div class="row rv" style="--d:.44s">
+          <span class="row-ic"><svg class="ic"><use href="#i-layers"/></svg></span>
+          <div><h4>Nested Layouts</h4><p>Layouts persist across their children — no remounting between pages.</p></div>
+        </div>
+        <div class="row rv" style="--d:.56s">
+          <span class="row-ic"><svg class="ic"><use href="#i-file"/></svg></span>
+          <div><h4>Special Files</h4><p>page · layout · loading · error. A folder only becomes a public route once it holds a page.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 · Routing patterns -->
+  <section class="slide" data-title="Folder-Based Routing Variants" data-kick="Routing">
+    <header class="s-head">
+      <p class="kick rv">Deep Dive — Routing Patterns</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Three ways to shape a route.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+    </header>
+    <div class="s-body">
+      <div class="routs">
+        <div class="rout rv" style="--d:.25s">
+          <div class="rout-pat">
+            <span class="pat">app/about/page.tsx</span>
+            <span class="pat-tag">Standard · Static</span>
+          </div>
+          <div><h4>Static Routes</h4><p>A predictable, fixed path — nothing dynamic about it.</p></div>
+          <span class="url-chip">→ /about</span>
+        </div>
+        <div class="rout rv" style="--d:.38s">
+          <div class="rout-pat">
+            <span class="pat">app/blog/[slug]/page.tsx</span>
+            <span class="pat-tag">Dynamic Segment</span>
+          </div>
+          <div><h4>Dynamic Routes</h4><p>Captures dynamic data from the URL — matches any value.</p></div>
+          <span class="url-chip">→ /blog/hello</span>
+        </div>
+        <div class="rout rv" style="--d:.51s">
+          <div class="rout-pat">
+            <span class="pat">app/(marketing)/page.tsx</span>
+            <span class="pat-tag">Route Group</span>
+          </div>
+          <div><h4>Route Groups</h4><p>Organizes files logically — without affecting the URL path.</p></div>
+          <span class="url-chip">→ /</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 · Server Components -->
+  <section class="slide" data-title="Deep Dive: Server Components" data-kick="RSC">
+    <header class="s-head">
+      <p class="kick rv">Deep Dive — 02</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Server Components —<br>the new default.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">Every component in the App Router is a Server Component — unless you explicitly say otherwise.</p>
+    </header>
+    <div class="s-body">
+      <div class="rows">
+        <div class="row rv" style="--d:.28s">
+          <span class="row-ic"><svg class="ic"><use href="#i-server"/></svg></span>
+          <div><h4>Zero Client Bundle</h4><p>Server Components never ship to the browser — no impact on your JavaScript bundle size.</p></div>
+        </div>
+        <div class="row rv" style="--d:.38s">
+          <span class="row-ic"><svg class="ic"><use href="#i-database"/></svg></span>
+          <div><h4>Direct Backend Access</h4><p>Query databases and read secrets safely, right inside the component.</p></div>
+        </div>
+        <div class="row rv" style="--d:.48s">
+          <span class="row-ic"><svg class="ic"><use href="#i-pointer"/></svg></span>
+          <div><h4>Opt-in Interactivity</h4><p>Add the "use client" directive only where you need state and events.</p></div>
+        </div>
+      </div>
+      <div class="boundary rv" style="--d:.6s">
+        <div class="b-zone b-server">
+          <h5>Server — the default</h5>
+          <div class="b-list">
+            <span class="b-item">page.tsx</span>
+            <span class="b-item">layout.tsx</span>
+            <span class="b-item">fetch data</span>
+            <span class="b-item">db access</span>
+            <span class="b-item">secrets</span>
+          </div>
+        </div>
+        <div class="b-zone b-client">
+          <h5>Client — the island</h5>
+          <div class="b-list">
+            <span class="b-item b-inv">"use client"</span>
+            <span class="b-item">state</span>
+            <span class="b-item">events</span>
+            <span class="b-item">browser APIs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 · Data fetching -->
+  <section class="slide" data-title="Deep Dive: Data Fetching" data-kick="Data">
+    <header class="s-head">
+      <p class="kick rv">Deep Dive — 03</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Data fetching — before &amp; after.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+    </header>
+    <div class="s-body df-grid">
+      <div class="df-col rv" style="--d:.22s">
+        <div class="code">
+          <div class="code-bar"><span>The Old Way</span><span class="code-tag">React · Client</span></div>
+          <pre><span class="tk-k">useEffect</span>(() => {
+  <span class="tk-k">fetch</span>(<span class="tk-str">'/api/data'</span>)
+    .then(res => res.<span class="tk-k">json</span>())
+    .then(setData)
+}, [])</pre>
+        </div>
+        <p class="df-cap"><svg class="ic x-ic"><use href="#i-x"/></svg>Requires state, effects — and every fetch happens on the client.</p>
+      </div>
+      <div class="df-col rv" style="--d:.36s">
+        <div class="code code-hi">
+          <div class="code-bar"><span>The New Way</span><span class="code-tag">Next.js · RSC</span></div>
+          <pre><span class="tk-k">export default async function</span> Page() {
+  <span class="tk-k">const</span> res = <span class="tk-k">await</span> <span class="tk-k">fetch</span>(<span class="tk-str">'https://api.xyz/data'</span>)
+  <span class="tk-k">const</span> data = <span class="tk-k">await</span> res.<span class="tk-k">json</span>()
+
+  <span class="tk-k">return</span> <span class="tk-tag">&lt;h1&gt;</span>{data.name}<span class="tk-tag">&lt;/h1&gt;</span>
+}</pre>
+        </div>
+        <p class="df-cap"><svg class="ic ok-ic"><use href="#i-check"/></svg>Async components — fetching directly on the server.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15 · Creating a project -->
+  <section class="slide" data-title="create-next-app: The Command" data-kick="CLI">
+    <header class="s-head">
+      <p class="kick rv">Hands On — Scaffold</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>One command to start.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">Run this in any empty folder. Node.js 18.18+ is the only requirement.</p>
+    </header>
+    <div class="s-body">
+      <div class="term rv" style="--d:.25s">
+        <div class="term-bar"><span class="term-dots"><i></i><i></i><i></i></span><span class="term-title">bash — terminal</span></div>
+        <div class="term-body">
+          <div class="tl"><span class="prompt">$</span> <span class="cmd" data-type="npx create-next-app@latest"></span><span class="caret"></span></div>
+        </div>
+      </div>
+      <button class="copy-btn rv" style="--d:.5s" id="copyCmd" type="button">
+        <svg class="ic"><use href="#i-copy"/></svg>
+        <span class="c-cmd">npx create-next-app@latest</span>
+        <span class="c-hint">Click to copy</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="slide" data-title="create-next-app: The Result" data-kick="CLI">
+    <header class="s-head">
+      <p class="kick rv">Hands On — Result</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Here's what you get.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">Answer the prompts, and a complete project is generated in seconds.</p>
+    </header>
+    <div class="s-body">
+            <div class="term rv" style="--d:.25s">
+          <div class="term-bar"><span class="term-dots"><i></i><i></i><i></i></span><span class="term-title">bash — create-next-app</span></div>
+          <div class="term-body">
+            <div class="tl"><span class="prompt">$</span> <span class="cmd" data-type="npx create-next-app@latest"></span><span class="caret"></span></div>
+            <div class="tl out"><span class="g">√</span> What is your project named? <span class="dim">…</span> <span class="a">my-app</span></div>
+            <div class="tl out"><span class="g">√</span> Would you like to use TypeScript? <span class="dim">…</span> <span class="a">Yes</span></div>
+            <div class="tl out"><span class="g">√</span> Would you like to use ESLint? <span class="dim">…</span> <span class="a">Yes</span></div>
+            <div class="tl out"><span class="g">√</span> Would you like to use Tailwind CSS? <span class="dim">…</span> <span class="a">No</span></div>
+            <div class="tl out"><span class="g">√</span> Would you like to use App Router? <span class="dim">(recommended) …</span> <span class="a">Yes</span></div>
+            <div class="tl out">Success! Created <span class="a">my-app</span> <span class="dim">— run</span> npm run dev <span class="dim">to start.</span></div>
+          </div>
+        </div>
+    </div>
+  </section>
+
+  <!-- 16 · File structure -->
+  <section class="slide" data-title="File Structure Overview" data-kick="Structure">
+    <header class="s-head">
+      <p class="kick rv">Hands On — Anatomy</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>The file structure.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">A fresh installation gives you a clean, predictable workspace — and <em>app</em> is the core of it all.</p>
+    </header>
+    <div class="s-body split">
+      <div class="split-l rv" style="--d:.25s">
+        <div class="code">
+          <div class="code-bar"><span>file tree</span><span class="code-tag">my-app/</span></div>
+          <pre>my-app/
+├── <span class="d">app/</span>
+│   ├── <span class="d">layout.tsx</span>
+│   ├── <span class="d">page.tsx</span>
+│   └── <span class="f">globals.css</span>
+├── <span class="f">public/</span>
+├── <span class="f">next.config.js</span>
+└── <span class="f">package.json</span></pre>
+        </div>
+      </div>
+      <div class="split-r rows">
+        <div class="row rv" style="--d:.32s">
+          <span class="row-ic"><svg class="ic"><use href="#i-folder"/></svg></span>
+          <div><h4>app/</h4><p>The root directory of the App Router — every route and every piece of UI lives here.</p></div>
+        </div>
+        <div class="row rv" style="--d:.44s">
+          <span class="row-ic"><svg class="ic"><use href="#i-layout"/></svg></span>
+          <div><h4>layout.tsx</h4><p>Shared UI for a segment and its children — persistent headers and footers that never remount.</p></div>
+        </div>
+        <div class="row rv" style="--d:.56s">
+          <span class="row-ic"><svg class="ic"><use href="#i-file"/></svg></span>
+          <div><h4>page.tsx</h4><p>The unique UI of a route segment — its presence is what makes a route public.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 17 · Live demo -->
+  <section class="slide" data-title="Run the Dev Server" data-kick="CLI">
+    <header class="s-head">
+      <p class="kick rv">Hands On — Run</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Now start it.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">With the structure in mind, enter the project and launch the dev server.</p>
+    </header>
+    <div class="s-body">
+      <div class="term rv" style="--d:.25s">
+        <div class="term-bar"><span class="term-dots"><i></i><i></i><i></i></span><span class="term-title">bash — npm run dev</span></div>
+        <div class="term-body">
+          <div class="tl"><span class="prompt">$</span> cd my-app</div>
+          <div class="tl"><span class="prompt">$</span> <span class="cmd" data-type="npm run dev"></span><span class="caret"></span></div>
+          <div class="tl out"><svg class="ic ic-fill" style="color:#4EC9B0"><use href="#i-tri"/></svg> Next.js <span class="dim">— ready when you are.</span></div>
+          <div class="tl out"><span class="dim">- Local:</span> <span class="a">http://localhost:3000</span></div>
+          <div class="tl out"><span class="g">√</span> Ready</div>
+        </div>
+      </div>
+      <button class="copy-btn rv" style="--d:.5s" id="copyDev" type="button">
+        <svg class="ic"><use href="#i-copy"/></svg>
+        <span class="c-cmd">npm run dev</span>
+        <span class="c-hint">Click to copy</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="slide" data-title="Live Demo — Five Phases" data-kick="Demo">
+    <header class="s-head">
+      <p class="kick rv">Live Demo</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Watch it come together.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">Five phases — from an empty folder to a fetching, full-stack app.</p>
+    </header>
+    <div class="s-body">
+      <div class="phases">
+        <div class="phase rv" style="--d:.22s">
+          <span class="pn">01</span>
+          <h4>Initialization</h4>
+          <p>Run <code>npm run dev</code> and explore the default setup.</p>
+          <span class="chip">Setup</span>
+        </div>
+        <div class="phase rv" style="--d:.32s">
+          <span class="pn">02</span>
+          <h4>Building Routes</h4>
+          <p>Create a folder and a <code>page.tsx</code> — a new view appears.</p>
+          <span class="chip">Frontend</span>
+        </div>
+        <div class="phase rv" style="--d:.42s">
+          <span class="pn">03</span>
+          <h4>Interactivity</h4>
+          <p>Wire up <code>onClick</code> events with the "use client" directive.</p>
+          <span class="chip">Frontend</span>
+        </div>
+        <div class="phase rv" style="--d:.52s">
+          <span class="pn">04</span>
+          <h4>API Route</h4>
+          <p>A <code>route.ts</code> file handles backend GET requests.</p>
+          <span class="chip">Backend</span>
+        </div>
+        <div class="phase rv" style="--d:.62s">
+          <span class="pn">05</span>
+          <h4>Fetching Data</h4>
+          <p>A Server Component pulls data from our new API.</p>
+          <span class="chip">Full-Stack</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-title="Demo 1–2: Run & Route" data-kick="Demo · Phases 1–2">
+    <header class="s-head">
+      <p class="kick rv">Demo · Phases 1–2</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Run it. Then route it.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">An empty folder becomes a running app, then a new page.</p>
+    </header>
+    <div class="s-body"><div class="fx-2"><div class="code rv" style="--d:.3s"><div class="fx-t">Terminal</div><pre class="fx-p">$ npm run dev
+  ▲ Next.js ready
+  - Local: http://localhost:3000</pre></div><div class="code rv" style="--d:.3s"><div class="fx-t">app/about/page.tsx</div><pre class="fx-p"><span class="tk-k">export</span> <span class="tk-k">default</span> <span class="tk-k">function</span> <span class="d">About</span>() {
+  <span class="tk-k">return</span> <span class="tk-tag">&lt;h1&gt;</span>About us<span class="tk-tag">&lt;/h1&gt;</span>;
+}
+<span class="cm">// Visit /about — no router config</span></pre></div></div></div>
+  </section>
+
+  <section class="slide" data-title="Demo 3: Interactivity" data-kick="Demo · Phase 3">
+    <header class="s-head">
+      <p class="kick rv">Demo · Phase 3</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Add interactivity.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">Server by default — opt in to the client only where needed.</p>
+    </header>
+    <div class="s-body"><div class="fx-2"><div class="code rv" style="--d:.3s"><div class="fx-t">app/counter/page.tsx</div><pre class="fx-p"><span class="tk-str">"use client"</span>;
+<span class="tk-k">import</span> { useState } <span class="tk-k">from</span> <span class="tk-str">"react"</span>;
+
+<span class="tk-k">export</span> <span class="tk-k">default</span> <span class="tk-k">function</span> <span class="d">Counter</span>() {
+  <span class="tk-k">const</span> [n, setN] = <span class="d">useState</span>(0);
+  <span class="tk-k">return</span> <span class="tk-tag">&lt;button</span> onClick={() => <span class="d">setN</span>(n + 1)}<span class="tk-tag">&gt;</span>
+    Clicked {n}
+  <span class="tk-tag">&lt;/button&gt;</span>;
+}</pre></div><div class="code rv" style="--d:.3s"><div class="fx-t">Why "use client"?</div><pre class="fx-p">Hooks and event handlers need the browser.
+Without the directive, this file runs on
+the server and onClick will fail.
+
+Tip: keep client components small and leaf-level.</pre></div></div></div>
+  </section>
+
+  <section class="slide" data-title="Demo 4–5: API & Fetch" data-kick="Demo · Phases 4–5">
+    <header class="s-head">
+      <p class="kick rv">Demo · Phases 4–5</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Backend and fetch.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">One route handler, one Server Component — full-stack.</p>
+    </header>
+    <div class="s-body"><div class="fx-2"><div class="code rv" style="--d:.3s"><div class="fx-t">app/api/hello/route.ts</div><pre class="fx-p"><span class="tk-k">export</span> <span class="tk-k">async</span> <span class="tk-k">function</span> <span class="d">GET</span>() {
+  <span class="tk-k">return</span> Response.<span class="d">json</span>({ msg: <span class="tk-str">"Hello"</span> });
+}</pre></div><div class="code rv" style="--d:.3s"><div class="fx-t">app/data/page.tsx</div><pre class="fx-p"><span class="tk-k">export</span> <span class="tk-k">default</span> <span class="tk-k">async</span> <span class="tk-k">function</span> <span class="d">Data</span>() {
+  <span class="tk-k">const</span> res = <span class="tk-k">await</span> <span class="d">fetch</span>(
+    <span class="tk-str">"http://localhost:3000/api/hello"</span>,
+    { cache: <span class="tk-str">"no-store"</span> });
+  <span class="tk-k">const</span> { msg } = <span class="tk-k">await</span> res.<span class="d">json</span>();
+  <span class="tk-k">return</span> <span class="tk-tag">&lt;p&gt;</span>{msg}<span class="tk-tag">&lt;/p&gt;</span>;
+}</pre></div></div></div>
+  </section>
+
+  <section class="slide" data-title="Common Pitfalls" data-kick="Troubleshooting">
+    <header class="s-head">
+      <p class="kick rv">Troubleshooting</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Common pitfalls.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">What usually goes wrong during the first hour.</p>
+    </header>
+    <div class="s-body"><div class="phases"><div class="phase rv" style="--d:0.2s"><span class="pn">01</span><h4>Hooks on the server</h4><p>Add "use client" when using useState or events.</p></div><div class="phase rv" style="--d:0.3s"><span class="pn">02</span><h4>Wrong file name</h4><p>Routes need page.tsx; APIs need route.ts.</p></div><div class="phase rv" style="--d:0.4s"><span class="pn">03</span><h4>Stale data</h4><p>Fetch is cached — set cache or revalidate.</p></div><div class="phase rv" style="--d:0.5s"><span class="pn">04</span><h4>Port in use</h4><p>Stop the old dev server or run with -p 3001.</p></div></div></div>
+  </section>
+
+  <section class="slide" data-title="Recap & Key Takeaways" data-kick="Recap">
+    <header class="s-head">
+      <p class="kick rv">Recap</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>What we learned.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">Part 1 in four lines.</p>
+    </header>
+    <div class="s-body"><div class="phases"><div class="phase rv" style="--d:0.2s"><span class="pn">01</span><h4>Framework</h4><p>Next.js adds routing, rendering and backend to React.</p></div><div class="phase rv" style="--d:0.3s"><span class="pn">02</span><h4>Rendering</h4><p>SSR and Server Components fix the blank-screen problem.</p></div><div class="phase rv" style="--d:0.4s"><span class="pn">03</span><h4>App Router</h4><p>Folders are routes; page.tsx makes them public.</p></div><div class="phase rv" style="--d:0.5s"><span class="pn">04</span><h4>Full-stack</h4><p>Route handlers and server fetching in one project.</p></div></div></div>
+  </section>
+
+  <section class="slide" data-title="Resources & Next Steps" data-kick="Keep Learning">
+    <header class="s-head">
+      <p class="kick rv">Keep Learning</p>
+      <h2 class="h2 mask" style="--d:.12s"><span>Resources &amp; next steps.</span></h2>
+      <div class="h2bar rv" style="--d:.22s"></div>
+      <p class="lead rv" style="--d:.3s">Part 2 and 3 build directly on this.</p>
+    </header>
+    <div class="s-body"><div class="phases"><div class="phase rv" style="--d:0.2s"><span class="pn">01</span><h4>Docs</h4><p>nextjs.org/docs — official guides.</p></div><div class="phase rv" style="--d:0.3s"><span class="pn">02</span><h4>Microsoft Learn</h4><p>learn.microsoft.com — free modules.</p></div><div class="phase rv" style="--d:0.4s"><span class="pn">03</span><h4>Practice</h4><p>Rebuild the demo with your own data.</p></div><div class="phase rv" style="--d:0.5s"><span class="pn">04</span><h4>Part 2 &amp; 3</h4><p>Next: components, then deployment.</p></div></div></div>
+  </section>
+
+  <!-- End -->
+  <section class="slide s-end" data-title="Questions?" data-kick="Closing">
+    <div class="end-wrap">
+      <svg class="ms-logo end-logo rv" style="--d:.05s"><use href="#ms-logo"/></svg>
+      <p class="kick rv" style="--d:.15s">Part 1 of 3 — Concepts · Complete</p>
+      <h2 class="end-title mask" style="--d:.25s"><span>Questions?</span></h2>
+      <p class="end-sub rv" style="--d:.45s"><span class="grad">Thank you</span> for your time.</p>
+      <div class="msa-tagline rv" style="--d:.55s">
+        <span><i style="background:#F25022"></i>Learn</span>
+        <span><i style="background:#7FBA00"></i>Build</span>
+        <span><i style="background:#00A4EF"></i>Create</span>
+        <span><i style="background:#FFB900"></i>Make an Impact</span>
+      </div>
+      <div class="end-actions rv" style="--d:.68s">
+        <button class="btn" id="restart" type="button"><svg class="ic"><use href="#i-chev-l"/></svg> Restart presentation</button>
+      </div>
+      <p class="end-credit rv" style="--d:.8s">Adapted from "Next.js Unlocked" &amp; "Introduction to Next.js — Part 1: Concepts" · Microsoft Learn Student Ambassadors</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ Footer chrome ============ -->
+<footer class="chrome bottom">
+  <div class="foot-title" id="footTitle">Next.js Unlocked</div>
+  <div class="foot-mid"><span class="live-dot" aria-hidden="true"></span><span class="clock" id="clock">00:00:00</span></div>
+  <div class="foot-right">
+    <button class="icon-btn" id="btnPrev" title="Previous (←)" aria-label="Previous slide"><svg class="ic"><use href="#i-chev-l"/></svg></button>
+    <span class="counter" id="counter">01 / 26</span>
+    <button class="icon-btn" id="btnNext" title="Next (→)" aria-label="Next slide"><svg class="ic"><use href="#i-chev-r"/></svg></button>
+  </div>
+</footer>
+<div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
+
+<!-- ============ Overview ============ -->
+<div class="ov" id="overview" hidden role="dialog" aria-label="Slide overview">
+  <div class="ov-head">
+    <span class="ov-title">Overview</span>
+    <span class="ov-hint">Click a slide to jump · Esc to close</span>
+    <button class="icon-btn" id="ovClose" title="Close (Esc)" aria-label="Close overview"><svg class="ic"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="ov-grid" id="ovGrid"></div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+  'use strict';
+  var $ = function(s, c){ return (c || document).querySelector(s); };
+  var $$ = function(s, c){ return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
+
+  /* ---------- Theme (light = Microsoft template default) ---------- */
+  var root = document.documentElement;
+  try { var saved = localStorage.getItem('msa-theme'); if (saved) root.dataset.theme = saved; } catch(e){}
+  function toggleTheme(){
+    var next = root.dataset.theme === 'light' ? 'dark' : 'light';
+    root.dataset.theme = next;
+    try { localStorage.setItem('msa-theme', next); } catch(e){}
+    toast(next === 'light' ? 'Light theme' : 'Dark theme');
+  }
+
+  /* ---------- Slides ---------- */
+  var slides = $$('.slide');
+  var total = slides.length;
+  var cur = -1;
+  var counter = $('#counter'), footTitle = $('#footTitle'), bar = $('#progressBar');
+  function pad(n){ return String(n).padStart(2, '0'); }
+
+  function go(n){
+    n = Math.max(0, Math.min(total - 1, n));
+    if (n === cur) return;
+    if (cur > -1) slides[cur].classList.remove('active');
+    cur = n;
+    var s = slides[cur];
+    s.classList.add('active');
+    s.scrollTop = 0;
+    counter.textContent = pad(cur + 1) + ' / ' + pad(total);
+    footTitle.textContent = s.dataset.title || '';
+    bar.style.width = ((cur + 1) / total * 100) + '%';
+    try { history.replaceState(null, '', '#/' + (cur + 1)); } catch(e){}
+    $$('.ov-item').forEach(function(el, i){ el.classList.toggle('cur', i === cur); });
+    runTyping(s);
+  }
+  function next(){ go(cur + 1); }
+  function prev(){ go(cur - 1); }
+
+  /* ---------- Terminal typing (auto re-types while the slide idles) ---------- */
+  var typeTimer = null, outTimers = [];
+  function runTyping(slide){
+    clearInterval(typeTimer);
+    outTimers.forEach(clearTimeout); outTimers = [];
+    var el = slide.querySelector('[data-type]');
+    if (!el) return;
+    var text = el.getAttribute('data-type');
+    var outs = $$('.tl.out', slide);
+    outs.forEach(function(o){ o.classList.remove('show'); });
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      el.textContent = text;
+      outs.forEach(function(o){ o.classList.add('show'); });
+      return;
+    }
+    el.textContent = '';
+    var i = 0;
+    typeTimer = setInterval(function(){
+      i++;
+      el.textContent = text.slice(0, i);
+      if (i >= text.length){
+        clearInterval(typeTimer);
+        outs.forEach(function(o, idx){
+          outTimers.push(setTimeout(function(){ o.classList.add('show'); }, 300 + idx * 240));
+        });
+        outTimers.push(setTimeout(function(){
+          if (slides[cur] === slide && !document.hidden) runTyping(slide);
+        }, 11000));
+      }
+    }, 45);
+  }
+
+  /* ---------- Live clock ---------- */
+  var clock = $('#clock');
+  function tick(){
+    var d = new Date();
+    var p = [d.getHours(), d.getMinutes(), d.getSeconds()].map(function(v){
+      return String(v).padStart(2, '0');
+    });
+    clock.innerHTML = p[0] + '<span class="colon">:</span>' + p[1] + '<span class="colon">:</span>' + p[2];
+  }
+  tick(); setInterval(tick, 1000);
+
+  /* ---------- Toast ---------- */
+  var toastEl = $('#toast'), toastT = null;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastT);
+    toastT = setTimeout(function(){ toastEl.classList.remove('show'); }, 1900);
+  }
+
+  /* ---------- Overview ---------- */
+  var ov = $('#overview'), ovGrid = $('#ovGrid'), ovClose = $('#ovClose');
+  slides.forEach(function(s, i){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ov-item';
+    b.innerHTML = '<span class="ov-n">' + pad(i + 1) + '</span>' +
+                  '<span class="ov-t"></span>' +
+                  '<span class="ov-k"></span>';
+    b.querySelector('.ov-t').textContent = s.dataset.title || ('Slide ' + (i + 1));
+    b.querySelector('.ov-k').textContent = s.dataset.kick || '';
+    b.addEventListener('click', function(){ toggleOverview(false); go(i); });
+    ovGrid.appendChild(b);
+  });
+  function toggleOverview(force){
+    var show = (force !== undefined) ? force : ov.hidden;
+    ov.hidden = !show;
+    if (show) ovClose.focus();
+  }
+
+  /* ---------- Fullscreen ---------- */
+  function toggleFull(){
+    if (document.fullscreenElement) { document.exitFullscreen().catch(function(){}); }
+    else { root.requestFullscreen().catch(function(){}); }
+  }
+
+  /* ---------- Idle animation stagger ---------- */
+  function initIdle(){
+    $$('.flow').forEach(function(f){
+      Array.prototype.forEach.call(f.children, function(el, i){
+        el.style.animationDelay = (i * 0.6) + 's';
+      });
+    });
+    $$('.feat .fn').forEach(function(n, i){ n.style.animationDelay = (i * 1.5) + 's'; });
+    $$('.ag-n').forEach(function(n, i){ n.style.animationDelay = (i * 0.9) + 's'; });
+    $$('.phase .pn').forEach(function(p, i){ p.style.animationDelay = (i * 1.0) + 's'; });
+    $$('.vs tbody tr').forEach(function(tr, i){
+      $$('.cl .ic', tr).forEach(function(ic){ ic.style.animationDelay = (i * 0.4) + 's'; });
+    });
+    $$('.rout').forEach(function(r, i){
+      var u = r.querySelector('.url-chip');
+      if (u) u.style.animationDelay = (i * 1.6) + 's';
+    });
+    $$('.b-list').forEach(function(l){
+      $$('.b-item', l).forEach(function(b, i){ b.style.animationDelay = (i * 0.8) + 's'; });
+    });
+    $$('.chip').forEach(function(c){
+      var sibs = Array.prototype.filter.call(c.parentElement.children, function(x){
+        return x.classList.contains('chip');
+      });
+      c.style.animationDelay = (sibs.indexOf(c) * 1.7) + 's';
+    });
+    $$('.phase .chip').forEach(function(c, i){ c.style.animationDelay = (i * 1.3) + 's'; });
+  }
+
+  /* ---------- Wiring ---------- */
+  $('#btnNext').addEventListener('click', next);
+  $('#btnPrev').addEventListener('click', prev);
+  $('#btnTheme').addEventListener('click', toggleTheme);
+  $('#btnFull').addEventListener('click', toggleFull);
+  $('#btnOverview').addEventListener('click', function(){ toggleOverview(); });
+  ovClose.addEventListener('click', function(){ toggleOverview(false); });
+  $('#restart').addEventListener('click', function(){ go(0); });
+
+  $$('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var cmd = btn.querySelector('.c-cmd').textContent.trim();
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(cmd).then(
+          function(){ toast('Copied — ' + cmd); },
+          function(){ toast('Copy blocked by the browser'); }
+        );
+      } else {
+        toast('Copy not available in this browser');
+      }
+    });
+  });
+
+
+  /* auto-hide floating controls */
+  var idleT;
+  function wake(){ document.body.classList.remove('idle'); clearTimeout(idleT); idleT = setTimeout(function(){ document.body.classList.add('idle'); }, 3000); }
+  ['mousemove','keydown','touchstart','click'].forEach(function(ev){ document.addEventListener(ev, wake, {passive:true}); });
+  wake();
+
+  document.addEventListener('keydown', function(e){
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = e.key;
+    var onBtn = e.target instanceof Element && e.target.closest('button, a, input, textarea');
+    if (k === 'Escape'){ if (!ov.hidden) toggleOverview(false); return; }
+    if (!ov.hidden){ if (k === 'o' || k === 'O') toggleOverview(false); return; }
+    if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown'){ e.preventDefault(); next(); }
+    else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp'){ e.preventDefault(); prev(); }
+    else if (k === 'Home'){ e.preventDefault(); go(0); }
+    else if (k === 'End'){ e.preventDefault(); go(total - 1); }
+    else if ((k === ' ' || k === 'Enter') && !onBtn){ e.preventDefault(); next(); }
+    else if (k === 'f' || k === 'F'){ toggleFull(); }
+    else if (k === 't' || k === 'T'){ toggleTheme(); }
+    else if (k === 'o' || k === 'O'){ toggleOverview(); }
+  });
+
+  /* Touch swipe */
+  var tx = 0, ty = 0;
+  document.addEventListener('touchstart', function(e){
+    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e){
+    var dx = e.changedTouches[0].clientX - tx;
+    var dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5){ (dx < 0) ? next() : prev(); }
+  }, { passive: true });
+
+  /* Init */
+  initIdle();
+  var m = location.hash.match(/^#\/(\d+)/);
+  var start = m ? Math.min(total, Math.max(1, +m[1])) - 1 : 0;
+  go(start);
+})();
+</script>
+</body>
+</html>

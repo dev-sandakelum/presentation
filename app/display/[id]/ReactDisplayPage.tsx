@@ -63,7 +63,18 @@ export default function ReactDisplayPage({ pres }: { pres: PresentationMeta }) {
   const [dir,     setDir]     = useState<'fwd' | 'back'>('fwd')
   const prevIdx = useRef(0)
 
-  // host info + QR
+  // Lock body scroll — restored on unmount so root page can still scroll
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+      document.documentElement.style.overflow = ''
+    }
+  }, [])
+
+  // Host info + QR
   useEffect(() => {
     fetch(`/api/host-info?presId=${pres.id}`)
       .then((r) => r.json())
@@ -141,7 +152,7 @@ export default function ReactDisplayPage({ pres }: { pres: PresentationMeta }) {
   return (
     <>
       <main
-        className="pres-pagein relative flex min-h-screen flex-col overflow-hidden bg-[#04070f] text-white select-none"
+        className="pres-pagein relative flex h-screen w-screen flex-col overflow-hidden bg-[#04070f] text-white select-none"
         onMouseMove={resetIdle}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
@@ -149,7 +160,7 @@ export default function ReactDisplayPage({ pres }: { pres: PresentationMeta }) {
         <SlideBackground />
 
         <div
-          className="relative z-10 flex flex-1 flex-col justify-center px-8 py-10 md:px-14 md:py-12"
+          className="relative z-10 flex flex-1 flex-col justify-center overflow-hidden px-8 py-10 md:px-14 md:py-12"
           style={{
             opacity:    visible ? 1 : 0,
             transform:  visible ? 'none' : dir === 'fwd' ? 'translateY(-7vh) scale(.98)' : 'translateY(7vh) scale(.98)',

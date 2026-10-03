@@ -31,6 +31,7 @@ export function useStageLink({ wsUrl, onState }: UseStageLinkOptions): UseStageL
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pingTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const mountedRef = useRef(true)
+  const failCountRef = useRef(0)
 
   const onStateRef = useRef(onState)
   onStateRef.current = onState
@@ -39,11 +40,24 @@ export function useStageLink({ wsUrl, onState }: UseStageLinkOptions): UseStageL
     if (!wsUrl || !mountedRef.current) return
 
     setStatus('connecting')
-    const ws = new WebSocket(wsUrl)
+
+    // After repeated proxy failures, fall back to the standalone port 4821
+    // by replacing :3000/wss/ with :4821/
+    let url = wsUrl
+    if (failCountRef.current >= 2) {
+      url = wsUrl
+        .replace(/:3000\/wss\//, ':4821/')
+        .replace(/:3000\/ws\//, ':4821/')
+    }
+
+    console.log(`[stagelink] connecting to ${url} (attempt ${failCountRef.current + 1})`)
+    const ws = new WebSocket(url)
     wsRef.current = ws
 
     ws.onopen = () => {
       if (!mountedRef.current) return
+      console.log('[stagelink] connected ✓')
+      failCountRef.current = 0
       setStatus('ready')
       pingTimer.current = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
@@ -72,14 +86,19 @@ export function useStageLink({ wsUrl, onState }: UseStageLinkOptions): UseStageL
       }
     }
 
-    ws.onclose = () => {
+    ws.onclose = (ev) => {
       if (!mountedRef.current) return
+      console.log(`[stagelink] closed — code=${ev.code} reason="${ev.reason}"`)
       clearInterval(pingTimer.current ?? undefined)
+      failCountRef.current++
       setStatus('offline')
       reconnectTimer.current = setTimeout(connect, RECONNECT_DELAY)
     }
 
-    ws.onerror = () => { ws.close() }
+    ws.onerror = (ev) => {
+      console.log('[stagelink] error', ev)
+      ws.close()
+    }
   }, [wsUrl])
 
   useEffect(() => {

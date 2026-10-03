@@ -21,6 +21,17 @@ export default function HtmlDisplayPage({ pres }: { pres: PresentationMeta }) {
 
   const total = pres.slideCount ?? 1
 
+  // Lock body scroll — restored on unmount so root page can still scroll
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+      document.documentElement.style.overflow = ''
+    }
+  }, [])
+
   // host info + QR
   useEffect(() => {
     fetch(`/api/host-info?presId=${pres.id}`)
